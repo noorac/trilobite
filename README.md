@@ -32,13 +32,11 @@ Future iterations will include machine learning models, enhanced visualization o
 
 This project is currently licensed under the [MIT License](./LICENSE). This allows for broad usage, modification, and distribution while requiring attribution to the original author.
 
-**Note**: The license may be subject to change in the future, depending on the program's development and potential commercial applications. Any changes to the license will be clearly communicated and documented.
-
 ---
 
 ## Contributing
 
-  Due to potential conflicts should the license change in the future, we are not taking contributions that will give copyrights to the software. 
+Contributions to Trilobite are welcome and encouraged, provided they comply with the license governing the project at the time of contribution. See CONTRIBUTING.md for details.
 
 ---
 
