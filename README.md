@@ -35,17 +35,24 @@ This project is currently licensed under the [MIT License](./LICENSE). This allo
 **Note**: The license may be subject to change in the future, depending on the program's development and potential commercial applications. Any changes to the license will be clearly communicated and documented.
 
 ---
+
 ## Contributing
 
   Due to potential conflicts should the license change in the future, we are not taking contributions that will give copyrights to the software. 
+
+---
 
 ## Acknowledgments
 
 Thank you for your interest in Trilobite! This project reflects a passion for data analysis, programming, and financial markets. Whether you're here to explore or to learn, I hope Trilobite offers inspiration and insight.
 
+---
+
 ## Disclaimer
 
 Trilobite is intended for educational and informational purposes only. It is not a financial advisory tool and should not be used to make real-world investment decisions. The author assumes no responsibility for any financial losses or damages arising from the use of this software.
+
+---
 
 ## Contact
 
