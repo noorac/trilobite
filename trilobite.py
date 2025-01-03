@@ -13,6 +13,7 @@ Date: 2025-01-01
 #import os
 import sys
 import logging
+from scraping import scraper
 
 # =========================
 # Constants
@@ -36,17 +37,17 @@ logger = logging.getLogger(__name__)
 # =========================
 # Helper Functions
 # =========================
-def example_function(param1, param2):
-    """
-    Example function that does something.
-    Args:
-        param1 (type): Description of param1.
-        param2 (type): Description of param2.
-    Returns:
-        type: Description of the return value.
-    """
-    logger.info(f"Running example_function with {param1=} and {param2=}")
-    return param1 + param2
+# def example_function(param1, param2):
+#     """
+#     Example function that does something.
+#     Args:
+#         param1 (type): Description of param1.
+#         param2 (type): Description of param2.
+#     Returns:
+#         type: Description of the return value.
+#     """
+#     logger.info(f"Running example_function with {param1=} and {param2=}")
+#     return param1 + param2
 
 # =========================
 # Main Function
@@ -56,9 +57,8 @@ def main():
     Main function to run the script.
     """
     logger.info("Starting the script...")
-    # Example usage
-    result = example_function(1, 2)
-    logger.info(f"Result: {result}")
+    scraper.dl_data("GOOG")
+    # logger.info(f"Result: {result}")
 
 # =========================
 # Entry Point
