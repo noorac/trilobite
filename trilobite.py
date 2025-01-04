@@ -13,6 +13,7 @@ Date: 2025-01-01
 #import os
 import sys
 import logging
+import string
 from scraping import scraper
 
 # =========================
@@ -45,8 +46,20 @@ def main():
     """
     Main function to run the script.
     """
-    logger.info(f"Starting main...")
-    scraper.dl_data("GOOG")
+    #Check if argument was given, and check if it is only letters
+    try:
+        for a in sys.argv[1]:
+            if a.lower() not in list(string.ascii_letters[:26]):
+                raise ValueError
+    except IndexError:
+        logger.error(f"IndexError: No argument was given, exiting...")
+        sys.exit(1)
+    except ValueError:
+        logger.error(f"ValueError: Not a letter, exiting...")
+        sys.exit(1)
+    ticker = sys.argv[1].upper()
+    logger.info(f"Starting main using {ticker=}...")
+    scraper.dl_data(ticker)
 
 # =========================
 # Entry Point
