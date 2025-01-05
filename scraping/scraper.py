@@ -49,14 +49,15 @@ def dl_data(arg) -> None:
     currentpath = os.path.realpath(__file__)
     # Change to data/raw folder
     folderpath = currentpath[:currentpath.rfind("scraping/scraper.py")] + "data/raw/" + arg
-    #folderpath = folderpath + "data/raw/" + arg
     logger.info(f"Checking for ticker-folder at {folderpath}")
+    # Check if ticker folder exists and create if it doesn't
     if not os.path.exists(folderpath):
         logger.info(f"Folder does not exist, creating folder for ticker '{arg}'")
         os.makedirs(folderpath)
     else:
         logger.info(f"Folder for ticker '{arg}' already exists, continuing")
     logger.info(f"Finished dl_data with {arg=}")
+    # Create path for filenames
     filepath = folderpath + "/" + arg + "_"
     #Save CSV formats
     # History
@@ -68,6 +69,7 @@ def dl_data(arg) -> None:
     #Quarterly
     qtrl = dt.quarterly_income_stmt
     qtrl.to_csv(filepath + "quarterly.csv")
+    #End save CSV formats
     # Save JSON formats
     # Info
     with open(filepath + "info.json", "w") as info_json:
@@ -77,6 +79,7 @@ def dl_data(arg) -> None:
     with open(filepath + "calendar.json", "w") as calendar_json:
         js.dump(dt.calendar, calendar_json, default=str)
     calendar_json.close()
+    # End save JSON formats
     return None
 
 # =========================
