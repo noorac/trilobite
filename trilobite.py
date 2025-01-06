@@ -15,6 +15,7 @@ import sys
 import logging
 import string
 from scraping import scraper
+from scraping import parsers
 
 # =========================
 # Constants
@@ -59,7 +60,9 @@ def main():
         sys.exit(1)
     ticker = sys.argv[1].upper()
     logger.info(f"Starting main using {ticker=}...")
-    scraper.dl_data(ticker)
+    ticker, filepath = scraper.dl_data(ticker)
+    parsers.clean_hist_data(ticker,filepath)
+
 
 # =========================
 # Entry Point
