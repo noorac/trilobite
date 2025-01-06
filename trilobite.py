@@ -10,7 +10,7 @@ Date: 2025-01-01
 # =========================
 # Imports
 # =========================
-#import os
+import os
 import sys
 import logging
 import string
@@ -40,6 +40,11 @@ logger = logging.getLogger(__name__)
 # Helper Functions
 # =========================
 
+def get_currentpath() -> str:
+    currentpath = os.path.realpath(__file__)
+    currentpath = currentpath[:currentpath.rfind("trilobite.py")]
+    logger.info(f"{currentpath=}")
+    return currentpath
 # =========================
 # Main Function
 # =========================
@@ -59,9 +64,10 @@ def main():
         logger.error(f"ValueError: Not a letter, exiting...")
         sys.exit(1)
     ticker = sys.argv[1].upper()
+    currentpath = get_currentpath()
     logger.info(f"Starting main using {ticker=}...")
-    ticker, filepath = scraper.dl_data(ticker)
-    parsers.clean_hist_data(ticker,filepath)
+    ticker= scraper.dl_data(ticker,currentpath)
+    parsers.clean_hist_data(ticker,currentpath)
 
 
 # =========================

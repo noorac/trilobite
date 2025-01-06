@@ -38,27 +38,27 @@ logger = logging.getLogger(__name__)
 # =========================
 # Helper Functions
 # =========================
-def dl_data(arg) -> tuple:
+def dl_data(ticker,currentpath) -> str:
     """
     Downloads and stores data, takes a ticker symbol as argument
     """
-    logger.info(f"Running dl_data with {arg=}")
+    logger.info(f"Running dl_data with {ticker=}")
     # Initialize the download
-    dt = yf.Ticker(arg)
+    dt = yf.Ticker(ticker)
     # Get path of this script
-    currentpath = os.path.realpath(__file__)
+    #currentpath = os.path.realpath(__file__)
     # Change to data/raw folder
-    folderpath = currentpath[:currentpath.rfind("scraping/scraper.py")] + "data/raw/" + arg
+    folderpath = currentpath + "data/raw/" + ticker
     logger.info(f"Checking for ticker-folder at {folderpath}")
     # Check if ticker folder exists and create if it doesn't
     if not os.path.exists(folderpath):
-        logger.info(f"Folder does not exist, creating folder for ticker '{arg}'")
+        logger.info(f"Folder does not exist, creating folder for ticker '{ticker}'")
         os.makedirs(folderpath)
     else:
-        logger.info(f"Folder for ticker '{arg}' already exists, continuing")
-    logger.info(f"Finished dl_data with {arg=}")
+        logger.info(f"Folder for ticker '{ticker}' already exists, continuing")
+    logger.info(f"Finished dl_data with {ticker=}")
     # Create path for filenames
-    filepath = folderpath + "/" + arg + "_"
+    filepath = folderpath + "/" + ticker + "_"
     #Save CSV formats
     # History
     hist = dt.history(period = 'max')
@@ -80,7 +80,7 @@ def dl_data(arg) -> tuple:
         js.dump(dt.calendar, calendar_json, default=str)
     calendar_json.close()
     # End save JSON formats
-    return arg, filepath
+    return ticker
 
 # =========================
 # Main Function
@@ -90,8 +90,8 @@ def main() -> None:
     Main function to run the script.
     """
     logger.info("Starting the script...")
-    arg = "GOOG"
-    dl_data(arg)
+    ticker = "GOOG"
+    dl_data(ticker, os.path.realpath(__file__))
     #logger.info(f"Result: {result}")
 
 # =========================

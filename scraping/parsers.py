@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 # =========================
 # Helper Functions
 # =========================
-def clean_hist_data(ticker,filepath) -> None:
+def clean_hist_data(ticker,currentpath) -> None:
     """
     Function that will grab history-data from ..data/raw and
     clean it and put it in data/processed. Argument passed
@@ -45,17 +45,18 @@ def clean_hist_data(ticker,filepath) -> None:
     .../data/raw/<ticker>/<ticker>_hist.csv
     """
     logger.info(f"Starting parsers.clean_hist_data()...")
-    print(filepath)
-    print(filepath[:filepath.rfind("raw/"+ticker+"/"+ticker+"_")])
-    processedpath = filepath[:filepath.rfind("raw/"+ticker+"/"+ticker+"_")]+"processed/"+ticker
-    logger.info(f"Checking for ticker-folder at {processedpath}")
-    if not os.path.exists(processedpath):
+    print(currentpath)
+    #print(currentpath[:currentpath.rfind("raw/"+ticker+"/"+ticker+"_")])
+    folderpath = currentpath + "data/processed/" + ticker
+    #folderpath = currentpath[:currentpath.rfind("raw/"+ticker+"/"+ticker+"_")]+"processed/"+ticker
+    logger.info(f"Checking for ticker-folder at {folderpath}")
+    if not os.path.exists(folderpath):
         logger.info(f"Folder does not exist, creating folder for ticker '{ticker}'")
-        os.makedirs(processedpath)
+        os.makedirs(folderpath)
     else:
         logger.info(f"Folder for ticker '{ticker}' already exists, continuing")
-    processedfile = processedpath + "/" + ticker + "_history_cleaned.csv"
-    df = pd.read_csv(filepath + "history.csv")
+    processedfile = folderpath + "/" + ticker + "_history_cleaned.csv"
+    df = pd.read_csv(currentpath+ "data/raw/"+ ticker + "/"+ ticker + "_history.csv")
     # Remove empty cells
     df.dropna(inplace = True)
     df.to_csv(processedfile)
@@ -72,8 +73,8 @@ def main():
     logger.info("Starting parsers.main()...")
     # Example usage
     ticker = "GOOG"
-    filepath = _ #insertfilepath
-    clean_hist_data(ticker, filepath)
+    currentpath = _ #insertcurrentpath
+    clean_hist_data(ticker, currentpath)
     logger.info(f"Finished running parsers.main()")
 
 # =========================
