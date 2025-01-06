@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 # =========================
 # Helper Functions
 # =========================
-def dl_data(arg) -> None:
+def dl_data(arg) -> tuple:
     """
     Downloads and stores data, takes a ticker symbol as argument
     """
@@ -77,7 +77,7 @@ def dl_data(arg) -> None:
     with open(filepath + "calendar.json", "w") as calendar_json:
         js.dump(dt.calendar, calendar_json, default=str)
     calendar_json.close()
-    return None
+    return arg, filepath
 
 # =========================
 # Main Function

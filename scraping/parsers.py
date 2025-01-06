@@ -10,9 +10,10 @@ Date: 2025-01-01
 # =========================
 # Imports
 # =========================
-#import os
+import os
 import sys
 import logging
+import pandas as pd
 
 # =========================
 # Constants
@@ -36,17 +37,30 @@ logger = logging.getLogger(__name__)
 # =========================
 # Helper Functions
 # =========================
-def example_function(param1, param2):
+def clean_hist_data(ticker,filepath) -> None:
     """
-    Example function that does something.
-    Args:
-        param1 (type): Description of param1.
-        param2 (type): Description of param2.
-    Returns:
-        type: Description of the return value.
+    Function that will grab history-data from ..data/raw and
+    clean it and put it in data/processed. Argument passed
+    should be the full file path:
+    .../data/raw/<ticker>/<ticker>_hist.csv
     """
-    logger.info(f"Running example_function with {param1=} and {param2=}")
-    return param1 + param2
+    logger.info(f"Starting parsers.clean_hist_data()...")
+    print(filepath)
+    print(filepath[:filepath.rfind("raw/"+ticker+"/"+ticker+"_")])
+    processedpath = filepath[:filepath.rfind("raw/"+ticker+"/"+ticker+"_")]+"processed/"+ticker
+    logger.info(f"Checking for ticker-folder at {processedpath}")
+    if not os.path.exists(processedpath):
+        logger.info(f"Folder does not exist, creating folder for ticker '{ticker}'")
+        os.makedirs(processedpath)
+    else:
+        logger.info(f"Folder for ticker '{ticker}' already exists, continuing")
+    processedfile = processedpath + "/" + ticker + "_history_cleaned.csv"
+    df = pd.read_csv(filepath + "history.csv")
+    # Remove empty cells
+    df.dropna(inplace = True)
+    df.to_csv(processedfile)
+    logger.info(f"Finished parsers.clean_hist_data()...")
+    return None
 
 # =========================
 # Main Function
@@ -55,10 +69,12 @@ def main():
     """
     Main function to run the script.
     """
-    logger.info("Starting the script...")
+    logger.info("Starting parsers.main()...")
     # Example usage
-    result = example_function(1, 2)
-    logger.info(f"Result: {result}")
+    ticker = "GOOG"
+    filepath = _ #insertfilepath
+    clean_hist_data(ticker, filepath)
+    logger.info(f"Finished running parsers.main()")
 
 # =========================
 # Entry Point
