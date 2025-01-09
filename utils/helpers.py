@@ -10,19 +10,22 @@ Date: 2025-01-01
 # =========================
 # Imports
 # =========================
-#import os
+
+import os
 import sys
 import logging
 
 # =========================
 # Constants
 # =========================
+
 VERSION = "1.0.0"
 LOG_FILE = "script.log"
 
 # =========================
 # Logger Configuration
 # =========================
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -36,29 +39,32 @@ logger = logging.getLogger(__name__)
 # =========================
 # Helper Functions
 # =========================
-def example_function(param1, param2):
+
+def checkdirs(folderpath) -> None:
     """
-    Example function that does something.
-    Args:
-        param1 (type): Description of param1.
-        param2 (type): Description of param2.
-    Returns:
-        type: Description of the return value.
+    Function that takes a path to a folder as argument, and
+    if the folder exists, it does nothing, but if it doesn't 
+    exist it creates a folder at the location.
     """
-    logger.info(f"Running example_function with {param1=} and {param2=}")
-    return param1 + param2
+    logger.info(f"Checking for ticker-folder at {folderpath}")
+    if not os.path.exists(folderpath):
+        logger.info(f"Folder does not exist, creating folder at {folderpath}'")
+        os.makedirs(folderpath)
+    else:
+        logger.info(f"Folder exist at {folderpath} .. continuing")
+    return None
 
 # =========================
 # Main Function
 # =========================
-def main():
+
+def main() -> None:
     """
     Main function to run the script.
     """
-    logger.info("Starting the script...")
-    # Example usage
-    result = example_function(1, 2)
-    logger.info(f"Result: {result}")
+    logger.info(f"Starting helpers.main()...")
+    logger.info(f"Ending helpers.main()...")
+    return None
 
 # =========================
 # Entry Point

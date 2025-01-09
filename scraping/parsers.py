@@ -14,6 +14,7 @@ import os
 import sys
 import logging
 import pandas as pd
+import utils.helpers
 
 # =========================
 # Constants
@@ -44,23 +45,20 @@ def clean_hist_data(ticker,currentpath) -> None:
     should be the full file path:
     .../data/raw/<ticker>/<ticker>_hist.csv
     """
-    logger.info(f"Starting parsers.clean_hist_data()...")
-    print(currentpath)
-    #print(currentpath[:currentpath.rfind("raw/"+ticker+"/"+ticker+"_")])
+    logger.info(f"Running scraping.parsers.clean_hist_data({ticker=})...")
+    # Create path to data/processed/ticker folder
     folderpath = currentpath + "data/processed/" + ticker
-    #folderpath = currentpath[:currentpath.rfind("raw/"+ticker+"/"+ticker+"_")]+"processed/"+ticker
-    logger.info(f"Checking for ticker-folder at {folderpath}")
-    if not os.path.exists(folderpath):
-        logger.info(f"Folder does not exist, creating folder for ticker '{ticker}'")
-        os.makedirs(folderpath)
-    else:
-        logger.info(f"Folder for ticker '{ticker}' already exists, continuing")
+    # Check if the folder exists and creat if it doesn't
+    utils.helpers.checkdirs(folderpath)
+    # Create path for filenames
     processedfile = folderpath + "/" + ticker + "_history_cleaned.csv"
+    # Read history data
     df = pd.read_csv(currentpath+ "data/raw/"+ ticker + "/"+ ticker + "_history.csv")
     # Remove empty cells
     df.dropna(inplace = True)
+    # Save history data
     df.to_csv(processedfile)
-    logger.info(f"Finished parsers.clean_hist_data()...")
+    logger.info(f"Finished scraping.parsers.clean_hist_data({ticker=})...")
     return None
 
 # =========================
