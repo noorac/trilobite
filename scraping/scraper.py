@@ -15,6 +15,7 @@ import sys
 import logging
 import yfinance as yf
 import json as js
+import utils.helpers
 
 # =========================
 # Constants
@@ -38,49 +39,42 @@ logger = logging.getLogger(__name__)
 # =========================
 # Helper Functions
 # =========================
-def dl_data(ticker,currentpath) -> str:
+def dl_data(ticker,currentpath) -> None:
     """
     Downloads and stores data, takes a ticker symbol as argument
     """
-    logger.info(f"Running dl_data with {ticker=}")
+    logger.info(f"Running scraping.scraper.dl_data({ticker=})")
     # Initialize the download
     dt = yf.Ticker(ticker)
-    # Get path of this script
-    #currentpath = os.path.realpath(__file__)
-    # Change to data/raw folder
+    # Change path to data/raw/ticker folder
     folderpath = currentpath + "data/raw/" + ticker
-    logger.info(f"Checking for ticker-folder at {folderpath}")
-    # Check if ticker folder exists and create if it doesn't
-    if not os.path.exists(folderpath):
-        logger.info(f"Folder does not exist, creating folder for ticker '{ticker}'")
-        os.makedirs(folderpath)
-    else:
-        logger.info(f"Folder for ticker '{ticker}' already exists, continuing")
-    logger.info(f"Finished dl_data with {ticker=}")
+    # Check if the folder exists and creat if it doesn't
+    utils.helpers.checkdirs(folderpath)
     # Create path for filenames
     filepath = folderpath + "/" + ticker + "_"
     #Save CSV formats
     # History
     hist = dt.history(period = 'max')
     hist.to_csv(filepath + "history.csv")
-    #Balance Sheet
+    # Balance Sheet
     bal_she = dt.balance_sheet
     bal_she.to_csv(filepath + "balance_sheet.csv")
-    #Quarterly
+    # Quarterly
     qtrl = dt.quarterly_income_stmt
     qtrl.to_csv(filepath + "quarterly.csv")
-    #End save CSV formats
+    # End save CSV formats
     # Save JSON formats
     # Info
     with open(filepath + "info.json", "w") as info_json:
         js.dump(dt.info, info_json)
     info_json.close()
-    print(dt.calendar)
+    # Calendar
     with open(filepath + "calendar.json", "w") as calendar_json:
         js.dump(dt.calendar, calendar_json, default=str)
     calendar_json.close()
     # End save JSON formats
-    return ticker
+    logger.info(f"Finished scraping.scraper.dl_data({ticker=})")
+    return None
 
 # =========================
 # Main Function

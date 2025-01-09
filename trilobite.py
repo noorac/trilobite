@@ -14,8 +14,8 @@ import os
 import sys
 import logging
 import string
-from scraping import scraper
-from scraping import parsers
+import scraping.scraper
+import scraping.parsers
 
 # =========================
 # Constants
@@ -64,10 +64,10 @@ def main():
         logger.error(f"ValueError: Not a letter, exiting...")
         sys.exit(1)
     ticker = sys.argv[1].upper()
+    logger.info(f"Starting main ...")
     currentpath = get_currentpath()
-    logger.info(f"Starting main using {ticker=}...")
-    ticker= scraper.dl_data(ticker,currentpath)
-    parsers.clean_hist_data(ticker,currentpath)
+    scraping.scraper.dl_data(ticker,currentpath)
+    scraping.parsers.clean_hist_data(ticker,currentpath)
 
 
 # =========================
