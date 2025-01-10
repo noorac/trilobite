@@ -16,6 +16,10 @@ import logging
 import string
 import scraping.scraper
 import scraping.parsers
+# import pandas as pd
+# import matplotlib.pyplot as plt
+# import numpy as np
+import analysis.stockobject
 
 # =========================
 # Constants
@@ -45,6 +49,7 @@ def get_currentpath() -> str:
     currentpath = currentpath[:currentpath.rfind("trilobite.py")]
     logger.info(f"{currentpath=}")
     return currentpath
+
 # =========================
 # Main Function
 # =========================
@@ -68,6 +73,16 @@ def main():
     currentpath = get_currentpath()
     scraping.scraper.dl_data(ticker,currentpath)
     scraping.parsers.clean_hist_data(ticker,currentpath)
+    stock = analysis.stockobject.Stockobject(ticker, currentpath)
+    # Menu-option, create more robust version later in issue #19
+    cont = True
+    while cont:
+        print(f"1. Create plot using closing values, 0. quit")
+        choise = input("Your choise: ")
+        if int(choise) == 0:
+            cont = False
+        if int(choise) == 1:
+            stock.show_graph()
 
 
 # =========================

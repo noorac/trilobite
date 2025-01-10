@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Filename: visualizations.py
-Description: Functions for plotting data trends
+Filename: stockobject.py
+Description: Contains the class stock. It will be an object of the stock,
+and load and contain data about the stock itself.
 Author: Kjetil Paulsen
-Date: 2025-01-01
+Date: 2025-01-10
 """
 
 # =========================
@@ -13,9 +14,7 @@ Date: 2025-01-01
 #import os
 import sys
 import logging
-import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
 
 # =========================
 # Constants
@@ -39,17 +38,24 @@ logger = logging.getLogger(__name__)
 # =========================
 # Helper Functions
 # =========================
-def show_graph(param1, param2):
-    """
-    Example function that does something.
-    Args:
-        param1 (type): Description of param1.
-        param2 (type): Description of param2.
-    Returns:
-        type: Description of the return value.
-    """
-    logger.info(f"Running example_function with {param1=} and {param2=}")
-    return param1 + param2
+
+# =========================
+# Classes
+# =========================
+
+class Stockobject:
+    def __init__(self, ticker, currentpath) -> None:
+        self.ticker = ticker
+        self.currentpath = currentpath
+        self.history = pd.read_csv(currentpath + "data/processed/" + ticker + "/" + ticker + "_history_cleaned.csv")
+        return None
+
+    # Remove the following and instead work it into visualizations.py as per issue#20
+    def show_graph(self) -> None:
+        # self.history["Close"].plot()
+        # plt.show()
+        logger.info(f"Showing graph in the future...")
+        return None
 
 # =========================
 # Main Function
@@ -58,10 +64,8 @@ def main():
     """
     Main function to run the script.
     """
-    logger.info("Starting the script...")
-    # Example usage
-    result = example_function(1, 2)
-    logger.info(f"Result: {result}")
+    logger.info("Starting stockobject.main()...")
+    logger.info("Finished stockobject.main()...")
 
 # =========================
 # Entry Point
