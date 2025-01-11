@@ -38,6 +38,7 @@ logger = logging.getLogger(__name__)
 # =========================
 # Helper Functions
 # =========================
+@utils.helpers.log_function_details
 def clean_hist_data(ticker,currentpath) -> None:
     """
     Function that will grab history-data from ..data/raw and
@@ -45,7 +46,6 @@ def clean_hist_data(ticker,currentpath) -> None:
     should be the full file path:
     .../data/raw/<ticker>/<ticker>_hist.csv
     """
-    logger.info(f"Running scraping.parsers.clean_hist_data({ticker=})...")
     # Create path to data/processed/ticker folder
     folderpath = currentpath + "data/processed/" + ticker
     # Check if the folder exists and creat if it doesn't
@@ -58,7 +58,6 @@ def clean_hist_data(ticker,currentpath) -> None:
     df.dropna(inplace = True)
     # Save history data
     df.to_csv(processedfile)
-    logger.info(f"Finished scraping.parsers.clean_hist_data({ticker=})...")
     return None
 
 # =========================
