@@ -15,6 +15,7 @@ Date: 2025-01-10
 import sys
 import logging
 import pandas as pd
+import utils.helpers
 
 # =========================
 # Constants
@@ -44,6 +45,7 @@ logger = logging.getLogger(__name__)
 # =========================
 
 class Stockobject:
+    @utils.helpers.log_function_details
     def __init__(self, ticker, currentpath) -> None:
         self.ticker = ticker
         self.currentpath = currentpath
@@ -51,6 +53,7 @@ class Stockobject:
         return None
 
     # Remove the following and instead work it into visualizations.py as per issue#20
+    @utils.helpers.log_function_details
     def show_graph(self) -> None:
         # self.history["Close"].plot()
         # plt.show()

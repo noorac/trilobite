@@ -39,11 +39,11 @@ logger = logging.getLogger(__name__)
 # =========================
 # Helper Functions
 # =========================
+@utils.helpers.log_function_details
 def dl_data(ticker,currentpath) -> None:
     """
     Downloads and stores data, takes a ticker symbol as argument
     """
-    logger.info(f"Running scraping.scraper.dl_data({ticker=})")
     # Initialize the download
     dt = yf.Ticker(ticker)
     # Change path to data/raw/ticker folder
@@ -73,7 +73,6 @@ def dl_data(ticker,currentpath) -> None:
         js.dump(dt.calendar, calendar_json, default=str)
     calendar_json.close()
     # End save JSON formats
-    logger.info(f"Finished scraping.scraper.dl_data({ticker=})")
     return None
 
 # =========================

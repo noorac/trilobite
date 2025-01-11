@@ -20,6 +20,7 @@ import scraping.parsers
 # import matplotlib.pyplot as plt
 # import numpy as np
 import analysis.stockobject
+import utils.helpers
 
 # =========================
 # Constants
@@ -44,6 +45,7 @@ logger = logging.getLogger(__name__)
 # Helper Functions
 # =========================
 
+@utils.helpers.log_function_details
 def get_currentpath() -> str:
     currentpath = os.path.realpath(__file__)
     currentpath = currentpath[:currentpath.rfind("trilobite.py")]
