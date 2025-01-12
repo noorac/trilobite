@@ -61,14 +61,11 @@ def main():
     """
     #Check if argument was given, and check if it is only letters
     try:
-        for a in sys.argv[1]:
-            if a.lower() not in list(string.ascii_letters[:26]):
-                raise ValueError
+         logger.info(f"{sys.argv[1]=}")
     except IndexError:
         logger.error(f"IndexError: No argument was given, exiting...")
         sys.exit(1)
-    except ValueError:
-        logger.error(f"ValueError: Not a letter, exiting...")
+    if not utils.helpers.check_valid_ticker(sys.argv[1]):
         sys.exit(1)
     ticker = sys.argv[1].upper()
     logger.info(f"Starting main ...")
