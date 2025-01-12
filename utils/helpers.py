@@ -15,6 +15,7 @@ import os
 import sys
 import logging
 import inspect
+import string
 
 # =========================
 # Constants
@@ -57,6 +58,18 @@ def log_function_details(func):
         logger.info(f"Finished {module_name}.{qualified_name}(*{args}, **{kwargs})")
         return result
     return wrapper
+
+@log_function_details
+def check_valid_ticker(ticker) -> bool:
+    valid = True
+    try:
+        for a in ticker:
+            if a.lower() not in list(string.ascii_letters[:26]):
+                raise ValueError
+    except ValueError:
+        logger.error(f"ValueError: Not a valid ticker ...")
+        valid = False
+    return valid
 
 @log_function_details
 def checkdirs(folderpath) -> None:
