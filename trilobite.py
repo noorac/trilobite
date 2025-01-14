@@ -52,6 +52,48 @@ def get_currentpath() -> str:
     logger.info(f"{currentpath=}")
     return currentpath
 
+@utils.helpers.log_function_details
+def print_menu(ticker) -> None:
+    # Header 
+    print(f"Trilobite:")
+    # What ticker is currently the active one
+    # Also one space
+    print(f"Current stock: {ticker}\n")
+    # Item one, change ticker
+    print(f"1) Change ticker: ")
+    # Item two, 
+    print(f"2) Show historial graph: \n")
+    # Quit
+    print(f"0) Quit: \n")
+    return None
+
+def menu_answer() -> int:
+    ans = input(f"Option: ")
+    try:
+        if int(ans) not in [0,1,2]:
+            print(f"Not an option")
+            menu_answer()
+    except ValueError:
+        print(f"Not an integer")
+        menu_answer()
+    return int(ans)
+
+def menu_cont(choise, ticker, currentpath) -> bool:
+    # Change ticker:
+    if choise == 1:
+        print(f"This option comes later")
+        return True
+    if choise == 2:
+        #This option should become a submenu in the future
+        stock = analysis.stockobject.Stockobject(ticker, currentpath)
+        stock.show_graph()
+        return True
+    if choise == 0:
+        return False
+    return True
+
+
+
 # =========================
 # Main Function
 # =========================
@@ -72,16 +114,13 @@ def main():
     currentpath = get_currentpath()
     scraping.scraper.dl_data(ticker,currentpath)
     scraping.parsers.clean_hist_data(ticker,currentpath)
-    stock = analysis.stockobject.Stockobject(ticker, currentpath)
     # Menu-option, create more robust version later in issue #19
     cont = True
     while cont:
-        print(f"1. Create plot using closing values, 0. quit")
-        choise = input("Your choise: ")
-        if int(choise) == 0:
-            cont = False
-        if int(choise) == 1:
-            stock.show_graph()
+        utils.helpers.clear_screen()
+        print_menu(ticker)
+        ans = menu_answer()
+        cont = menu_cont(ans, ticker, currentpath)
 
 
 # =========================
