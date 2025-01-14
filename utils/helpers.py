@@ -60,6 +60,14 @@ def log_function_details(func):
     return wrapper
 
 @log_function_details
+def clear_screen() -> None:
+    """
+    Clears the terminal
+    """
+    os.system("cls" if os.name == "nt" else "clear")
+    return None
+
+@log_function_details
 def check_valid_ticker(ticker) -> bool:
     valid = True
     try:
