@@ -51,37 +51,11 @@ class Stockobject:
     def __init__(self, ticker, currentpath) -> None:
         self.ticker = ticker
         self.currentpath = currentpath
-        #Temp path, fix later
-        self.temppath = currentpath + "data/processed/" + ticker + "/" + ticker + "_saveplot.png"
-        self.history = pd.read_csv(currentpath + "data/processed/" + ticker + "/" + ticker + "_history_cleaned.csv")
-        self.date = pd.to_datetime(self.history["Date"])
-        self.open = self.history["Open"]
-        self.close = self.history["Close"]
-        self.high = self.history["High"]
-        self.low = self.history["Low"]
-        self.volume = self.history["Volume"]
-        return None
-
-    @utils.helpers.log_function_details
-    def show_graph(self) -> None:
-        # self.history["Close"].plot()
-        # plt.show()
-        analysis.visualizations.show_graph(
-                                        self.temppath,
-                                        self.date,
-                                        self.open,
-                                        self.close, 
-                                        self.high,
-                                        self.low,
-                                        self.volume
-                                        )
-        #Temp path problem, fix later, check also in visualizations.py
-        #Reason this is here is because the output of the decorator function
-        #log_function_details outputs the whole dataframes, and the image
-        #dissapears due to the volume of text passing.
-        #Fix later
-        if "KITTY_WINDOW_ID" in os.environ:
-            os.system(f"kitty +kitten icat {self.temppath}")
+        self.rawpath = currentpath + "data/raw/" + ticker + "/" + ticker
+        self.processedpath = currentpath + "data/processed/" + ticker + "/" + ticker
+        self.historypath = self.processedpath + "_history_cleaned.csv"
+        self.plotpath = self.processedpath + "_saveplot.png"
+        self.history = pd.read_csv(self.historypath)
         return None
 
 # =========================

@@ -41,10 +41,16 @@ logger = logging.getLogger(__name__)
 # Helper Functions
 # =========================
 @utils.helpers.log_function_details
-def show_graph(temppath,date, open, close, high, low, volume) -> None:
+def show_graph(stock) -> None:
     """
     Function will display a graph of the stock
     """
+    date = pd.to_datetime(stock.history["Date"], utc=True)
+    open = stock.history["Open"]
+    close = stock.history["Close"]
+    high = stock.history["High"]
+    low = stock.history["Low"]
+    volume = stock.history["Volume"]
     max_value = high.max()
     fig, ax1 = plt.subplots(figsize=(10,5))
     # Primary y-axis for stock prices
@@ -59,11 +65,6 @@ def show_graph(temppath,date, open, close, high, low, volume) -> None:
     # Set maxlimits on y-axis, and give a bit of breathing room
     ax1.set_ylim(0, max_value*1.15)
     
-    # Secondary y-axis for Volume
-    # ax2 = ax1.twinx()
-    # ax2.bar(date, volume, label="Volume", color="orange", alpha=0.3, width=1)
-    # ax2.set_ylabel("Volume")
-    # ax2.legend(loc="upper right")
     ax2 = ax1.twinx()
     max_volume = volume.max()
     max_price = max(high.max(), close.max())  # Get the max stock price
@@ -73,18 +74,21 @@ def show_graph(temppath,date, open, close, high, low, volume) -> None:
     ax2.legend(loc="upper right")
 
     # Set aspect ratio (2:1)
-    #ax1.set_aspect(aspect=0.5, adjustable='datalim')
     fig.set_size_inches(10,5)
     
     # Title and show
     plt.title("Stock Prices and Volume")
     plt.tight_layout()  # Adjust layout
+    # Save plot
+    plt.savefig(stock.plotpath, format="png", dpi=300)
     # Check if users is using kitty-terminal
-    # if kitty then save image and display in term
-    # if not, just show()
-    #Fix this later(I mean the path and stuff)
-    plt.savefig(temppath, format="png", dpi=300)
-    if not "KITTY_WINDOW_ID" in os.environ:#.get("TERM", "").lower():
+    # Kitty: display in terminal
+    # Not Kitty: simply show()
+    if "KITTY_WINDOW_ID" in os.environ:
+        os.system(f"kitty +kitten icat {stock.plotpath}")
+        # Wait
+        _ = input("Press enter to continue>")
+    if not "KITTY_WINDOW_ID" in os.environ:
         plt.show()
     return None
 
