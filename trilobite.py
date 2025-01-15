@@ -20,6 +20,7 @@ import scraping.parsers
 # import matplotlib.pyplot as plt
 # import numpy as np
 import analysis.stockobject
+import analysis.visualizations
 import utils.helpers
 
 # =========================
@@ -86,7 +87,7 @@ def menu_cont(choise, ticker, currentpath) -> bool:
     if choise == 2:
         #This option should become a submenu in the future
         stock = analysis.stockobject.Stockobject(ticker, currentpath)
-        stock.show_graph()
+        analysis.visualizations.show_graph(stock)
         return True
     if choise == 0:
         return False
