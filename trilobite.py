@@ -53,6 +53,14 @@ def get_currentpath() -> str:
     logger.info(f"{currentpath=}")
     return currentpath
 
+def change_ticker() -> str:
+    utils.helpers.clear_screen()
+    print(f"Chose a ticker:\n")
+    ticker = input(">")
+    if not utils.helpers.check_valid_ticker(ticker):
+        ticker = change_ticker()
+    return ticker
+
 @utils.helpers.log_function_details
 def print_menu(ticker) -> None:
     # Header 
@@ -79,19 +87,23 @@ def menu_answer() -> int:
         menu_answer()
     return int(ans)
 
-def menu_cont(choise, ticker, currentpath) -> bool:
+def menu_cont(choise, ticker, currentpath) -> tuple:
     # Change ticker:
+    # sending back the continue, ticker and currentpath again
+    # in case ticker is changed. update the menusystem more 
+    # at a later time.
     if choise == 1:
+        ticker = change_ticker()
         print(f"This option comes later")
-        return True
+        return True, ticker, currentpath
     if choise == 2:
         #This option should become a submenu in the future
         stock = analysis.stockobject.Stockobject(ticker, currentpath)
         analysis.visualizations.show_graph(stock)
-        return True
+        return True, ticker, currentpath
     if choise == 0:
-        return False
-    return True
+        return False, ticker, currentpath
+    return True, ticker, currentpath
 
 
 
@@ -113,15 +125,15 @@ def main():
     ticker = sys.argv[1].upper()
     logger.info(f"Starting main ...")
     currentpath = get_currentpath()
-    scraping.scraper.dl_data(ticker,currentpath)
-    scraping.parsers.clean_hist_data(ticker,currentpath)
     # Menu-option, create more robust version later in issue #19
     cont = True
     while cont:
+        scraping.scraper.dl_data(ticker,currentpath)
+        scraping.parsers.clean_hist_data(ticker,currentpath)
         utils.helpers.clear_screen()
         print_menu(ticker)
         ans = menu_answer()
-        cont = menu_cont(ans, ticker, currentpath)
+        cont, ticker, currentpath = menu_cont(ans, ticker, currentpath)
 
 
 # =========================
