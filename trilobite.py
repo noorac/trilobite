@@ -61,6 +61,20 @@ def change_ticker() -> str:
         ticker = change_ticker()
     return ticker
 
+def stock_sub_menu(ticker, currentpath) -> None:
+    """
+    The submenu of a stock
+    """
+    print(f"Trilobite:")
+    print(f"Current stock: {ticker}\n")
+    # Item one, change ticker
+    print(f"1) Download data")
+    # Item two, 
+    print(f"2) Show historial graph: \n")
+    # Quit
+    print(f"0) Quit: \n")
+    return None
+
 @utils.helpers.log_function_details
 def print_menu(ticker) -> None:
     # Header 
@@ -98,6 +112,7 @@ def menu_cont(choise, ticker, currentpath) -> tuple:
         return True, ticker, currentpath
     if choise == 2:
         #This option should become a submenu in the future
+        stock_sub_menu(ticker,currentpath)
         stock = analysis.stockobject.Stockobject(ticker, currentpath)
         analysis.visualizations.show_graph(stock)
         return True, ticker, currentpath
