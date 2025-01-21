@@ -16,6 +16,7 @@ import logging
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import scipy
 import utils.helpers
 
 # =========================
@@ -53,11 +54,22 @@ def show_graph(stock) -> None:
     volume = stock.history["Volume"]
     max_value = high.max()
     fig, ax1 = plt.subplots(figsize=(10,5))
+    # Linear regression
+    # pretty bad, needs fixing
+    x = stock.history.iloc[:,0]
+    slope, intercept, r, p, std_err = scipy.stats.linregress(x, close)
+    def myfunc(x):
+        return slope * x + intercept
+    mymodel = list(map(myfunc,x))
+    # END setup for linear regression
     # Primary y-axis for stock prices
     ax1.plot(date, open, label="Open", linestyle="--", color="blue", alpha=0.6)
     ax1.plot(date, high, label="High", linestyle="--", color="green", alpha=0.6)
     ax1.plot(date, low, label="Low", linestyle="--", color="red", alpha=0.6)
     ax1.plot(date, close, label="Close", linewidth=2, color="black")  # Thicker line for Close
+    # Plot for linear regression
+    ax1.plot(date,mymodel)
+    # END plot for linear regression
     ax1.set_xlabel("Date")
     ax1.set_ylabel("Stock Price")
     ax1.legend(loc="upper left")
