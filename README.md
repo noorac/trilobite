@@ -22,7 +22,7 @@ Trilobite is a work in progress, with the following goals guiding its developmen
 Trilobite is currently in its early stages of development. Its primary focus is on:
 
 - Downloading and processing financial data.
-- Developing initial data visualization capabilities.
+- Developing initial data visualization capabilities, including linear regression. 
 
 Future iterations will include machine learning models, enhanced visualization options, and tools for predictive analysis.
 
