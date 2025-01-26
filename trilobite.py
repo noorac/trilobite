@@ -85,7 +85,7 @@ def print_menu(ticker) -> None:
     # Item one, change ticker
     print(f"1) Change ticker: ")
     # Item two, 
-    print(f"2) Show historial graph: \n")
+    print(f"2) Submenu for ticker: \n")
     # Quit
     print(f"0) Quit: \n")
     return None
@@ -101,6 +101,17 @@ def menu_answer() -> int:
         menu_answer()
     return int(ans)
 
+def sub_menu_cont(choise, ticker, currentpath) -> tuple:
+    if choise == 1:
+        #Download data
+        scraping.scraper.dl_data(ticker,currentpath)
+        scraping.parsers.clean_hist_data(ticker,currentpath)
+    if choise == 2:
+        #Show graph
+        stock = analysis.stockobject.Stockobject(ticker, currentpath)
+        analysis.visualizations.show_graph(stock)
+    return ticker, currentpath
+
 def menu_cont(choise, ticker, currentpath) -> tuple:
     # Change ticker:
     # sending back the continue, ticker and currentpath again
@@ -111,10 +122,14 @@ def menu_cont(choise, ticker, currentpath) -> tuple:
         print(f"This option comes later")
         return True, ticker, currentpath
     if choise == 2:
-        #This option should become a submenu in the future
-        stock_sub_menu(ticker,currentpath)
-        stock = analysis.stockobject.Stockobject(ticker, currentpath)
-        analysis.visualizations.show_graph(stock)
+        cont = True
+        while cont:
+            stock_sub_menu(ticker,currentpath)
+            ans = menu_answer()
+            if ans is not 0:
+                sub_menu_cont(ans,ticker,currentpath)
+            if ans is 0:
+                cont = False
         return True, ticker, currentpath
     if choise == 0:
         return False, ticker, currentpath
@@ -143,8 +158,6 @@ def main():
     # Menu-option, create more robust version later in issue #19
     cont = True
     while cont:
-        scraping.scraper.dl_data(ticker,currentpath)
-        scraping.parsers.clean_hist_data(ticker,currentpath)
         utils.helpers.clear_screen()
         print_menu(ticker)
         ans = menu_answer()
