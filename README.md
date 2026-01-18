@@ -96,3 +96,81 @@ psql -d trilobite
 ```
 
 If this opens the PostgreSQL promp without asking for a password your setup is complete and you can start using the trilobite program.
+
+---
+
+---
+
+## Using a virtual environment (venv)
+
+Even though this project currently only uses the standard library, using a venv is recommended.
+
+### Create venv
+
+```bash
+python -m venv .venv
+```
+
+### Activate the venv
+```bash
+source .venv/bin/activate
+```
+### Upgrade pip(optional)
+
+```bash
+python -m pip install --upgrade pip
+```
+
+### Install from pyproject.toml
+```bash
+pip install -e .
+```
+### And alternatively for dev
+```bash
+pip install -e '.[dev]'
+```
+Or install everything from requirements file.
+### Install from requirements.txt
+```bash
+python3 -m pip install -r requirements.txt
+```
+
+### Run the program
+```bash
+trilobite
+```
+
+### Deactivate venv(when done using the program)
+```bash
+deactivate
+```
+
+---
+
+## Known limitations / TODOs
+
+- Misc
+
+---
+
+## Logging
+
+The application configures basic logging at startup:
+
+- Intended primarily for development and debugging
+
+---
+
+## License
+
+This project is licensed under the terms of the license included in the repository:
+
+- [LICENSE](./LICENSE)
+
+---
+
+## Author
+
+**Kjetil Paulsen**
+
+- GitHub: [https://github.com/noorac](https://github.com/noorac)
