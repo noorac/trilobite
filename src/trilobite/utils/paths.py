@@ -17,3 +17,12 @@ def logs_dir(create: bool = True) -> Path:
     if create:
         path.mkdir(parents=True, exist_ok=True)
     return path
+
+def data_dir(create: bool = True) -> Path:
+    """
+    Returns a path object for the data directory
+    """
+    path = project_root() / "data"
+    if create:
+        path.mkdir(parents=True, exist_ok=True)
+    return path
