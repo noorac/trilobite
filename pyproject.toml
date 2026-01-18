@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trilobite"
+version = "0.1.0"
+description = "Market data ingestion, storage, and analysis tool"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+
+authors = [
+  { name = "Kjetil Paulsen", email = "kjetil_paulsen@hotmail.com" }
+]
+
+dependencies = [
+  "yfinance",
+  "pandas",
+  "psycopg[binary]",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "pytest-cov",
+  "ruff",
+]
+
+# Console entrypoint
+[project.scripts]
+trilobite = "trilobite.__main__:main"
+
+# --- setuptools configuration for src/ layout ---
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# --- pytest configuration ---
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
