@@ -6,7 +6,7 @@ class YFClient:
     """
     Gets the data
     """
-    def get_ohlcv(self, ticker: str, start_date: date  = date(1900, 1, 1)) -> DataFrame:
+    def get_ohlcv(self, ticker: str, start_date: date) -> DataFrame:
         """
         Gets the data from the date spesified until today, if no date object 
         is sent, it defaults to 1900, which is most likely max
@@ -38,5 +38,3 @@ class YFClient:
         #strip the time and leave the date
         df["date"] = df["date"].dt.date
         return df
-        
-    
