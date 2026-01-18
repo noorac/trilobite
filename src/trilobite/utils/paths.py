@@ -9,4 +9,11 @@ def project_root() -> Path:
     """
     return Path(__file__).resolve().parents[3]
 
-
+def logs_dir(create: bool = True) -> Path:
+    """
+    Returns a path object for the logs directory
+    """
+    path = project_root() / "logs"
+    if create:
+        path.mkdir(parents=True, exist_ok=True)
+    return path
