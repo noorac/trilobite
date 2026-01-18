@@ -35,3 +35,12 @@ def exports_dir(create: bool = True) -> Path:
     if create:
         path.mkdir(parents=True, exist_ok=True)
     return path
+
+def tmp_dir(create: bool = True) -> Path:
+    """
+    Returns a path object for the tmp directory
+    """
+    path = project_root() / "tmp"
+    if create:
+        path.mkdir(parents=True, exist_ok=True)
+    return path
