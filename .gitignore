@@ -205,3 +205,94 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# ================================
+# Extra ignores to complement GitHub's Python template
+# (linux + vim + vscode + postgres/database + project-specific)
+# ================================
+
+# --- Linux / Desktop ---
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.DocumentRevisions-V100
+.fseventsd
+.TemporaryItems
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# KDE / Plasma
+*~.swp
+*.kate-swp
+
+# --- Vim / Neovim ---
+# Swap files
+*.swp
+*.swo
+*.swn
+*.swm
+*.swl
+# Backup files
+*.bak
+*.tmp
+*.orig
+*.rej
+# Session / views
+Session.vim
+Sessionx.vim
+.netrwhist
+*~
+# Neovim state
+.nvimlog
+
+# --- VS Code ---
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+*.code-workspace
+
+# --- Jupyter (extra) ---
+.ipynb_checkpoints/
+*.nbconvert.ipynb
+
+# --- PostgreSQL / Database ---
+# Local DB directories / runtime files
+pgdata/
+postgres-data/
+postgresql/data/
+*.pid
+# Dumps / exports
+*.sql
+*.dump
+*.backup
+*.bak
+*.gz
+
+# --- dotenv / secrets (you already ignore .env, but keep common variants) ---
+.env.*
+!.env.example
+
+# --- Project specific ---
+# Keep folders but ignore contents (use .gitkeep)
+logs/*
+!logs/.gitkeep
+
+data/*
+!data/.gitkeep
+
+# If you store local exports/backtests etc.
+exports/
+tmp/
+.cache/
