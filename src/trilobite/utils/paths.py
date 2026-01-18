@@ -26,3 +26,12 @@ def data_dir(create: bool = True) -> Path:
     if create:
         path.mkdir(parents=True, exist_ok=True)
     return path
+
+def exports_dir(create: bool = True) -> Path:
+    """
+    Returns a path object for the exports directory
+    """
+    path = project_root() / "exports"
+    if create:
+        path.mkdir(parents=True, exist_ok=True)
+    return path
