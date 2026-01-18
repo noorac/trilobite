@@ -115,10 +115,10 @@ python -m venv .venv
 ```bash
 source .venv/bin/activate
 ```
-### Upgrade pip(optional)
+### Upgrade pip and install setuptools and wheel
 
 ```bash
-python -m pip install --upgrade pip
+python -m pip install --upgrade pip setuptools wheel
 ```
 
 ### Install from pyproject.toml

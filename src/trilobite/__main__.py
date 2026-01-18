@@ -5,17 +5,17 @@ import logging
 import sys
 from typing import NoReturn
 
-#from trilobite.app import build_app
+from trilobite.app import App
 from trilobite.logging.setup import setup_logging
 
 def _curses_main(stdscr: "curses._CursesWindow") -> None:
     """
     Runs inside curses.wrapper() and starts the actual application
     """
-    # app = build_app()
-    # app.run(stdscr)
-    logger = logging.getLogger(__name__)
-    logger.info("Hello")
+    #pass stdscr into run or into uicontroller?
+    app = App()
+    app.run()
+
 
 def main() -> NoReturn:
     """
@@ -24,6 +24,10 @@ def main() -> NoReturn:
     - Starts curses
     - Handles fatal errors
     """
+    argv = sys.argv[1:]
+    debug = "--debug" in argv
+    level = logging.DEBUG if debug else logging.INFO
+
     #minimal fallback logging to stderr if unable to start setup_logging()
     logging.basicConfig(
             level=logging.INFO,
@@ -32,7 +36,7 @@ def main() -> NoReturn:
     logger = logging.getLogger("trilobite")
 
     try:
-        setup_logging()
+        setup_logging(level=level)
         curses.wrapper(_curses_main)
     except KeyboardInterrupt:
         logger.info("Interrupted by user")
