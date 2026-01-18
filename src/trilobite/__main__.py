@@ -12,9 +12,8 @@ def _curses_main(stdscr: "curses._CursesWindow") -> None:
     """
     Runs inside curses.wrapper() and starts the actual application
     """
-    #pass stdscr into run or into uicontroller?
     app = App()
-    app.run()
+    app.run(stdscr)
 
 
 def main() -> NoReturn:
