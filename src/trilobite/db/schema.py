@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS ohlcv_daily (
 
     volume BIGINT,
     dividends NUMERIC,
-    stockstplits NUMERIC,
+    stocksplits NUMERIC,
 
     PRIMARY KEY (instrument_id, date)
 

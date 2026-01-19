@@ -47,7 +47,7 @@ class MarketRepo:
                 INSERT INTO instrument (ticker)
                 VALUES (%s)
                 ON CONFLICT (ticker) DO UPDATE SET ticker = EXCLUDED.ticker
-                RETURNING idf;
+                RETURNING id;
                 """,
                 (ticker,),
             )
@@ -97,8 +97,7 @@ class MarketRepo:
             for _, r in df[cols].iterrows()
         )
         
-        sql = 
-        """
+        sql = """
         INSERT INTO ohlcv_daily (
             instrument_id, date, open, high, low, close, adjclose, volume, dividends, stocksplits
         )

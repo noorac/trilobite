@@ -3,11 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from marketservice import MarketService
 from trilobite.db.connect import connect
 from trilobite.db.repo import MarketRepo
 from trilobite.db.schema import create_schema
 from trilobite.marketdata.yfclient import YFClient
+from trilobite.marketdata.marketservice import MarketService
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class App:
         Starting up the app system
         """
         logger.info("Starting curses..")
-        ticker = "AAPL"
+        ticker = "GOOGL"
         df = self._state.market.get_ohlcv(ticker)
 
         instrument_id = self._state.repo.ensure_instrument(ticker)
