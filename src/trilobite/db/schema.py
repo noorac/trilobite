@@ -34,6 +34,12 @@ CREATE INDEX IF NOT EXISTS idx_instrument_ticker
 """
 
 def create_schema(conn: psycopg.Connection) -> None:
+    """
+    Creates database tables and indexes if they do not already exist.
+
+    Params:
+    - conn: open psycopg connection to the target database
+    """
     with conn.cursor() as cur:
         cur.execute(DDL)
     conn.commit()
