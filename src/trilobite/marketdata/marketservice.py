@@ -7,12 +7,28 @@ from trilobite.marketdata.yfclient import YFClient
 logger = logging.getLogger(__name__)
 
 class MarketService:
+    """
+    Service wrapper for the market data retrieval.
+
+    Params:
+    - client: A concrete client implementation that knnows how to fetch OHLCV 
+    data, e.g YFClient
+    """
     def __init__(self, client: YFClient) -> None:
         self._client = client
 
     def get_ohlcv(self, ticker: str, start_date: date = date(1900, 1, 1)) -> DataFrame:
         """
-        Calls the client and returns the data
+        Normalizes and validates the ticker, then delegates the fetch of 
+        OHLCV to the client.
+
+        Params:
+        - ticker: the instrument ticker symbol, e.g. "AAPL", "GOOGL"
+        - start_date: first day(inclusive) to request from the data provider.
+        Defaults to 1900-1-1 ( intended to go as far back as possible)
+
+        Returns:
+        - pandas.DataFrame containing the OHLCV data
         """
         ticker = ticker.strip().upper()
         if not ticker:

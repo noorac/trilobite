@@ -13,12 +13,15 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class AppState:
+    """
+    Stores the state of different objects needed by App
+    """
     repo: MarketRepo
     market: MarketService
 
 class App:
     """
-    The main app
+    The main app! This object will run most of the program
     """
     def __init__(self) -> None:
         logger.info("Initializing ..")
@@ -32,6 +35,7 @@ class App:
         client = YFClient()
         market = MarketService(client=client)
 
+        #Create AppState
         self._state = AppState(repo=repo, market=market)
         return None
 
@@ -46,9 +50,10 @@ class App:
 
     def run(self, stdscr: "curses._CursesWindow") -> None:
         """
-        Starting up the app system
+        Starting up the UIController, takes in the stdscr from curses
         """
         logger.info("Starting curses..")
+        # TEMP TESTING
         ticker = "GOOGL"
         df = self._state.market.get_ohlcv(ticker)
 
@@ -57,5 +62,8 @@ class App:
         affected = self._state.repo.upsert_ohlcv_daily(instrument_id=instrument_id, df = df)
 
         count = affected if affected > 0 else len(df.index)
+
+        self.close()
+        # END TEMP TESTING
         return None
 
