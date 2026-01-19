@@ -4,12 +4,21 @@ from pandas import DataFrame
 
 class YFClient:
     """
-    Gets the data
+    Yahoo Finance client based on yfinance. 
+
+    This is intentionally small: it does no validation and no persistence. It 
+    simply requests and normalizes the returned DataFrame.
     """
     def get_ohlcv(self, ticker: str, start_date: date) -> DataFrame:
         """
-        Gets the data from the date spesified until today, if no date object 
-        is sent, it defaults to 1900, which is most likely max
+        Download daily OHLCV data for ticker from start_date until today.
+
+        Params:
+        - ticker: Ticker symbol accepted by Yahoo Finance
+        - start_date: First day(inclusive) of the history request
+
+        Returns:
+        - pandas.DataFrame containing the data
         """
         t = yf.Ticker(ticker)
         df = t.history(
