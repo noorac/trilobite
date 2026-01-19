@@ -34,9 +34,29 @@ def _float_or_none(x: Any) -> float | None:
 
 @dataclass
 class MarketRepo:
+    """
+    Repository for market-data persistence.
+
+    Params:
+    - conn: an open psycipg connection.
+    """
     conn: psycopg.Connection
 
     def ensure_instrument(self, ticker: str) -> int:
+        """
+        Ensure a row exists in instrument for the given ticker and return its id
+
+        Performs an upsert:
+        - if the ticker doesnt exist, it is inserted
+        - if it exists, it is updated to iself
+
+        Params:
+        - ticker: ticker symbol
+
+        Returns:
+        - int: the instrument id
+
+        """
         ticker = ticker.strip().upper()
         if not ticker:
             raise ValueError("Ticker cannot be empty")
@@ -59,9 +79,15 @@ class MarketRepo:
 
     def upsert_ohlcv_daily(self, instrument_id: int, df: DataFrame) -> int:
         """
-        Given an instrument_id, upserts daily OHLCV rows
-        Expects df columns: date, open, high, low, close, adjclose, volume,
-        dividends, stocksplits
+        Upsert daily OHLCV rows into ahlcv_daily table for given instrument
+
+        Params:
+        - instrument_id: the id of the instrument in the instrument table
+        - df: dataframe containing the daily data.
+
+        Returns:
+        - int: number of affected rows reported by psycopg for executemany, 
+        returns 0 if the DataFrame is empty.
         """
         if df.empty:
             return 0
