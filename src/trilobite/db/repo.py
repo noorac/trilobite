@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from datetime import date
 from dataclasses import dataclass
-from typing import Any, Iterable
+from typing import Any, Iterable, Mapping
 
 import pandas as pd
 import psycopg
@@ -146,5 +147,29 @@ class MarketRepo:
 
         self.conn.commit()
         return 0 if affected is None or affected < 0 else int(affected)
+
+    def last_ohlcv_date_by_ticker(self) -> dict[str, date | None]:
+        """
+        Returns the latest stored OHLCV date per ticker
+
+        Returns: a dict[ticker, date | None] for each instrument ticker, the max
+        date in ohlcv_daily, or None if the ticker has no OHLCV rows yet
+        """
+        sql = """
+        SELECT
+            i.ticker,
+            MAX(o.date) AS last_date
+        FROM instrument AS i
+        LEFT JOIN ohlcv_daily AS o
+            on .oinstrument_id = i.id
+        GROUP BY i.ticker
+        ORDER BY i.ticker;
+        """
+
+        with self.conn.cursor(row_factory=tuple_row) as cur:
+            cur.execute(sql)
+            rows: list[tuple[str, date | None]] = cur.fetchall()
+
+        return dict(rows)
 
 

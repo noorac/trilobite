@@ -54,13 +54,18 @@ class App:
         """
         logger.info("Starting curses..")
         # TEMP TESTING
+        #Setup ticker and instrument_id
         ticker = "GOOGL"
-        df = self._state.market.get_ohlcv(ticker)
-
         instrument_id = self._state.repo.ensure_instrument(ticker)
 
+        #Get data
+        df = self._state.market.get_ohlcv(ticker)
+
+
+        #Ingest data
         affected = self._state.repo.upsert_ohlcv_daily(instrument_id=instrument_id, df = df)
 
+        #Number of affected rows
         count = affected if affected > 0 else len(df.index)
 
         self.close()
