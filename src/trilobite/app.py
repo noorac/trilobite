@@ -75,6 +75,24 @@ class App:
         nyse_url: str = "https://raw.githubusercontent.com/rreichel3/US-Stock-Symbols/refs/heads/main/nyse/nyse_tickers.json"
         amex_url: str = "https://raw.githubusercontent.com/rreichel3/US-Stock-Symbols/refs/heads/main/amex/amex_tickers.json"
 
+        with urllib.request.urlopen(nyse_url) as response:
+            nyse_tickers: List[str] = json.load(response)
+        #cleanup
+        nyse_tickers = [t.replace("^", "-") for t in nyse_tickers]
+
+        with urllib.request.urlopen(amex_url) as response:
+            amex_tickers: List[str] = json.load(response)
+        #cleanup
+        amex_tickers = [t.replace("^", "-") for t in amex_tickers]
+
+        with urllib.request.urlopen(nasdaq_url) as response:
+            nasdaq_tickers: List[str] = json.load(response)
+        #cleanup
+        nasdaq_tickers = [t.replace("^", "-") for t in nasdaq_tickers]
+
+        #TEMP return list
+        return ["AAPL", "GOOGL", "DIS"]
+
 
 
 
@@ -85,10 +103,13 @@ class App:
         logger.info("Starting curses..")
         # TEMP TESTING
         #Setup ticker and instrument_id
-        ticker = "GOOGL"
+        tickers = self.get_todays_tickers()
 
         #check for last date ticker was updated
         update_dict = self._state.repo.last_ohlcv_date_by_ticker()
+
+        for ticker in tickers:
+            update_dict.setdefault(ticker, None)
         for ticker, start_date in update_dict.items():
             self.update_tickers(
                     ticker,

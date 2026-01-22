@@ -161,7 +161,7 @@ class MarketRepo:
             MAX(o.date) AS last_date
         FROM instrument AS i
         LEFT JOIN ohlcv_daily AS o
-            on .oinstrument_id = i.id
+            on o.instrument_id = i.id
         GROUP BY i.ticker
         ORDER BY i.ticker;
         """
