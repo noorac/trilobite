@@ -59,11 +59,12 @@ class App:
         #Make sure we have an instrument id for the ticker
         instrument_id = self._state.repo.ensure_instrument(ticker)
         #Fetch the data and store to dataframe
-        df = self._state.market.get_ohlcv(ticker)
+        df = self._state.market.get_ohlcv(ticker, start_date)
         #Ingest the data in the DB
         affected = self._state.repo.upsert_ohlcv_daily(instrument_id=instrument_id, df = df)
         #Number of affected rows
         count = affected if affected > 0 else len(df.index)
+        logger.info(count)
         return None
 
         
@@ -91,7 +92,7 @@ class App:
         nasdaq_tickers = [t.replace("^", "-") for t in nasdaq_tickers]
 
         #TEMP return list
-        return ["AAPL", "GOOGL", "DIS"]
+        return ["AAPL", "GOOGL", "DIS", "NVDA"]
 
 
 
