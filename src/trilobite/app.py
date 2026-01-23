@@ -10,6 +10,7 @@ import urllib.request
 from trilobite.db.connect import connect
 from trilobite.db.repo import MarketRepo
 from trilobite.db.schema import create_schema
+from trilobite.marketdata.tickerservice import TickerService
 from trilobite.marketdata.yfclient import YFClient
 from trilobite.marketdata.marketservice import MarketService
 
@@ -22,6 +23,7 @@ class AppState:
     """
     repo: MarketRepo
     market: MarketService
+    ticker: TickerService
 
 class App:
     """
@@ -38,9 +40,10 @@ class App:
         # Market wiring
         client = YFClient()
         market = MarketService(client=client)
+        ticker = TickerService()
 
         #Create AppState
-        self._state = AppState(repo=repo, market=market)
+        self._state = AppState(repo=repo, market=market, ticker=ticker)
         return None
 
     def close(self) -> None:
@@ -52,10 +55,14 @@ class App:
         except Exception:
             logger.exception("Failed at closing DB connection")
 
-    def update_tickers(self, ticker: str, start_date: date) -> None:
+    def update_tickers(self, ticker: str, start_date: date | None) -> None:
         """
         Updates the tickers
         """
+        # check_for_corporate_action = True if start_date is not None
+        # start_date = start_date if start_date is not None else date(1900,1,1)
+        start_date, check_for_corporate_action = (start_date, True) if start_date is not None else (date(1900,1,1), False)
+        #if start_date is not None else date(1900,1,1)
         #Make sure we have an instrument id for the ticker
         instrument_id = self._state.repo.ensure_instrument(ticker)
         #Fetch the data and store to dataframe
@@ -92,7 +99,7 @@ class App:
         nasdaq_tickers = [t.replace("^", "-") for t in nasdaq_tickers]
 
         #TEMP return list
-        return ["AAPL", "GOOGL", "DIS", "NVDA"]
+        return ["AAPL", "GOOGL", "DIS", "NVDA", "CAT"]
 
 
 
@@ -103,18 +110,13 @@ class App:
         """
         logger.info("Starting curses..")
         # TEMP TESTING
-        #Setup ticker and instrument_id
         tickers = self.get_todays_tickers()
-
-        #check for last date ticker was updated
         update_dict = self._state.repo.last_ohlcv_date_by_ticker()
-
-        for ticker in tickers:
-            update_dict.setdefault(ticker, None)
-        for ticker, start_date in update_dict.items():
+        ticker_dict = self._state.ticker.return_tickers(tickers, update_dict)
+        for ticker, start_date in ticker_dict.items():
             self.update_tickers(
                     ticker,
-                    start_date if start_date is not None else date(1900,1,1)
+                    start_date,
             )
 
         self.close()
