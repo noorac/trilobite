@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import List
 from dataclasses import dataclass
 from datetime import date
+from pandas import DataFrame
 import logging
 import json
 import urllib.request
@@ -55,23 +56,37 @@ class App:
         except Exception:
             logger.exception("Failed at closing DB connection")
 
-    def update_tickers(self, ticker: str, start_date: date | None) -> None:
+    def detect_corporate_action(self, df: DataFrame) -> bool:
+        """
+        Checks if Stocksplits or Dividends column of the given dataframe are
+        different from 0.0, meaning there was a stocksplit or dividend action
+        that day.
+
+        Params:
+        - df: the DataFrame to check
+
+        Returns:
+        - bool: returns True if there was a corporate action in the DataFrame
+        """
+        return ((df["dividends"] != 0.0).any() or (df["stocksplits"] != 0.0).any())
+
+    def update_ticker(self, ticker: str, start_date: date | None) -> None:
         """
         Updates the tickers
         """
-        # check_for_corporate_action = True if start_date is not None
-        # start_date = start_date if start_date is not None else date(1900,1,1)
         start_date, check_for_corporate_action = (start_date, True) if start_date is not None else (date(1900,1,1), False)
-        #if start_date is not None else date(1900,1,1)
-        #Make sure we have an instrument id for the ticker
+
         instrument_id = self._state.repo.ensure_instrument(ticker)
-        #Fetch the data and store to dataframe
         df = self._state.market.get_ohlcv(ticker, start_date)
+        if check_for_corporate_action:
+            if self.detect_corporate_action(df):
+                self.update_ticker(ticker, date(1900,1,1))
+
         #Ingest the data in the DB
         affected = self._state.repo.upsert_ohlcv_daily(instrument_id=instrument_id, df = df)
         #Number of affected rows
         count = affected if affected > 0 else len(df.index)
-        logger.info(count)
+        logger.info(f"{ticker}: {count} added")
         return None
 
         
@@ -99,7 +114,7 @@ class App:
         nasdaq_tickers = [t.replace("^", "-") for t in nasdaq_tickers]
 
         #TEMP return list
-        return ["AAPL", "GOOGL", "DIS", "NVDA", "CAT"]
+        return ["AAPL", "GOOGL", "DIS", "NVDA", "CAT", "META", "TSLA"]
 
 
 
@@ -114,7 +129,7 @@ class App:
         update_dict = self._state.repo.last_ohlcv_date_by_ticker()
         ticker_dict = self._state.ticker.return_tickers(tickers, update_dict)
         for ticker, start_date in ticker_dict.items():
-            self.update_tickers(
+            self.update_ticker(
                     ticker,
                     start_date,
             )
