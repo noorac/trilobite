@@ -6,13 +6,15 @@ import sys
 from typing import NoReturn
 
 from trilobite.app import App
+from trilobite.config.load import load_config
 from trilobite.logging.setup import setup_logging
 
 def _curses_main(stdscr: "curses._CursesWindow") -> None:
     """
     Runs inside curses.wrapper() and starts the actual application
     """
-    app = App()
+    cfg = load_config({})
+    app = App(cfg)
     app.run(stdscr)
 
 

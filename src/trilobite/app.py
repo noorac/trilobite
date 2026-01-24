@@ -6,8 +6,8 @@ from datetime import date, timedelta
 from pandas import DataFrame
 import logging
 
-from trilobite.config.models import CFGTickerService
-from trilobite.db.connect import connect
+from trilobite.config.models import AppConfig, CFGTickerService, CFGDataBase
+from trilobite.db.connect import DbSettings, connect
 from trilobite.db.repo import MarketRepo
 from trilobite.db.schema import create_schema
 from trilobite.marketdata.yfclient import YFClient
@@ -31,14 +31,21 @@ class App:
     """
     The main app! This object will run most of the program
     """
-    def __init__(self) -> None:
+    def __init__(self, cfg: AppConfig) -> None:
         logger.info("Initializing ..")
 
+        self._cfg = cfg
+
         #CFG stuff hardcoded for now
-        self.cfgtickerservice = CFGTickerService(default_date=date(1900,1,1), default_timedelta=10)
+        #self.cfgtickerservice = CFGTickerService(default_date=date(1900,1,1), default_timedelta=10)
 
         # DB wiring
-        self._conn = connect()
+        self._conn = connect(DbSettings(
+            dbname=cfg.db.dbname,
+            host=cfg.db.host,
+            user=cfg.db.user,
+            port=cfg.db.port,
+        ))
         create_schema(self._conn)
         repo = MarketRepo(self._conn)
 
@@ -48,7 +55,7 @@ class App:
 
         # Ticker wiring
         tickerclient = TickerClient()
-        ticker = TickerService(repo=repo, tickerclient=tickerclient, cfg=self.cfgtickerservice)
+        ticker = TickerService(repo=repo, tickerclient=tickerclient, cfg=cfg.ticker)
 
         #Create AppState
         self._state = AppState(repo=repo, market=market, ticker=ticker)
@@ -91,7 +98,7 @@ class App:
         if ticker.check_corporate_actions and self.detect_corporate_action(df):
             fullupdate = replace(
                     ticker,
-                    update_date = self.cfgtickerservice.default_date,
+                    update_date = self._cfg.ticker.default_date,
                     check_corporate_actions = False,
             )
             return self.update_ticker(fullupdate)
