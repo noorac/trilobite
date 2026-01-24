@@ -11,9 +11,10 @@ import urllib.request
 from trilobite.db.connect import connect
 from trilobite.db.repo import MarketRepo
 from trilobite.db.schema import create_schema
-from trilobite.marketdata.tickerservice import TickerService
 from trilobite.marketdata.yfclient import YFClient
 from trilobite.marketdata.marketservice import MarketService
+from trilobite.tickers.tickerclient import TickerClient
+from trilobite.tickers.tickerservice import TickerService
 
 logger = logging.getLogger(__name__)
 
@@ -39,9 +40,12 @@ class App:
         repo = MarketRepo(self._conn)
 
         # Market wiring
-        client = YFClient()
-        market = MarketService(client=client)
-        ticker = TickerService()
+        yfclient = YFClient()
+        market = MarketService(client=yfclient)
+
+        # Ticker wiring
+        tickerclient = TickerClient()
+        ticker = TickerService(repo=repo, tickerclient=tickerclient)
 
         #Create AppState
         self._state = AppState(repo=repo, market=market, ticker=ticker)
@@ -89,45 +93,13 @@ class App:
         logger.info(f"{ticker}: {count} added")
         return None
 
-        
-    def get_todays_tickers(self) -> list:
-        """
-        Returns a list of todays tickers
-        """
-        nasdaq_url: str = "https://raw.githubusercontent.com/rreichel3/US-Stock-Symbols/refs/heads/main/nasdaq/nasdaq_tickers.json"
-        nyse_url: str = "https://raw.githubusercontent.com/rreichel3/US-Stock-Symbols/refs/heads/main/nyse/nyse_tickers.json"
-        amex_url: str = "https://raw.githubusercontent.com/rreichel3/US-Stock-Symbols/refs/heads/main/amex/amex_tickers.json"
-
-        with urllib.request.urlopen(nyse_url) as response:
-            nyse_tickers: List[str] = json.load(response)
-        #cleanup
-        nyse_tickers = [t.replace("^", "-") for t in nyse_tickers]
-
-        with urllib.request.urlopen(amex_url) as response:
-            amex_tickers: List[str] = json.load(response)
-        #cleanup
-        amex_tickers = [t.replace("^", "-") for t in amex_tickers]
-
-        with urllib.request.urlopen(nasdaq_url) as response:
-            nasdaq_tickers: List[str] = json.load(response)
-        #cleanup
-        nasdaq_tickers = [t.replace("^", "-") for t in nasdaq_tickers]
-
-        #TEMP return list
-        return ["AAPL", "GOOGL", "DIS", "NVDA", "CAT", "META", "TSLA"]
-
-
-
-
     def run(self, stdscr: "curses._CursesWindow") -> None:
         """
         Starting up the UIController, takes in the stdscr from curses
         """
         logger.info("Starting curses..")
         # TEMP TESTING
-        tickers = self.get_todays_tickers()
-        update_dict = self._state.repo.last_ohlcv_date_by_ticker()
-        ticker_dict = self._state.ticker.return_tickers(tickers, update_dict)
+        ticker_dict = self._state.ticker.update()
         for ticker, start_date in ticker_dict.items():
             self.update_ticker(
                     ticker,

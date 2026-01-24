@@ -4,11 +4,8 @@ from dataclasses import dataclass
 from typing import Protocol
 from datetime import date
 
-@dataclass(frozen=True)
-class TickerUpdate:
-    """
-    Contains data about updates
-    """
+from trilobite.tickers.tickerclient import TickerClient
+
 
 class TickerRepo(Protocol):
     """
@@ -18,13 +15,22 @@ class TickerRepo(Protocol):
     def last_ohlcv_date_by_ticker(self) -> dict[str, date | None]:
         ...
 
+@dataclass(frozen=True)
+class TickerUpdate:
+    """
+    Contains data about updates
+    """
+
 class TickerService:
     """
     Keeps track of tickers
     """
     def __init__(self, repo: TickerRepo, tickerclient: TickerClient) -> None:
-        self._ticker_list = []
-        self._ticker_dict = {}
+        self._repo = repo
+        self._tickerclient = tickerclient
+
+        self._ticker_list: list[str] = []
+        self._ticker_dict: dict[str, date | None] = {}
 
     def update_ticker_list(self, fresh_ticker_list: list[str]) -> None:
         """
@@ -78,3 +84,15 @@ class TickerService:
         self.prune_ticker_dict_with_fresh_tickers()
         return self._ticker_dict
 
+    def update(self) -> dict[str, date | None]:
+        """
+        Runs the methods to get updates 
+        """
+        self._ticker_list = self._tickerclient.get_todays_tickers()
+        
+        #Temp used for testing during dev
+        self._ticker_list = ["AAPL", "GOOGL", "DIS", "NVDA", "CAT", "META", "TSLA"]
+        self._ticker_dict = self._repo.last_ohlcv_date_by_ticker()
+
+        #Update to dataclass object later?
+        return self._ticker_dict
