@@ -32,7 +32,7 @@ class App:
     The main app! This object will run most of the program
     """
     def __init__(self, cfg: AppConfig) -> None:
-        logger.info("Running __init__")
+        logger.info("Running ..")
 
         self._cfg = cfg
 
@@ -113,7 +113,7 @@ class App:
         """
         Starting up the UIController, takes in the stdscr from curses
         """
-        logger.info("Starting curses..")
+        logger.info("Running ..")
         # TEMP TESTING
         for ticker in self._state.ticker.update():
             self.update_ticker(ticker)

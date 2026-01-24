@@ -3,10 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 from datetime import date, timedelta
+import logging
 
 from trilobite.config.models import CFGTickerService
 from trilobite.tickers.tickerclient import TickerClient
 
+logger = logging.getLogger(__name__)
 
 class TickerRepo(Protocol):
     """
@@ -152,6 +154,7 @@ class TickerService:
         self._prune_missing_tickers()
 
         if fullupdate:
+            logger.info(f"fullupdate True: Resetting all dates to None")
             for key, val in self._ticker_dict.items():
                 self._ticker_dict[key] = None
 
