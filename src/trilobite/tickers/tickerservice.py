@@ -21,9 +21,10 @@ class Ticker:
     Contains data on tickers
     """
     ticker: str
-    start_date: date
-    lastdate: date | None
+    default_date: date
+    update_date: date | None
     check_corporate_actions: bool
+    fullupdate: bool
 
 
 class TickerService:
@@ -55,10 +56,42 @@ class TickerService:
             if key in set(self._ticker_list)
         }
 
-    def _build_ticker_objects(self, ticker: str, lastdate: date | None) -> None:
+    def _find_start_date(self, lastdate: date | None) -> date:
+        """
+        Sets the start date for the ticker by deciding if lastdate is a date 
+        or a Nonetype
+
+        Params:
+        - lastdate: either a date if it exists in the db and is previously 
+        stored, or None if it doesn't exist
+
+        Returns:
+        - date object, lastdate if not None, default date(1900,1,1) if None
+        """
+        return lastdate if lastdate is not None else date(1900,1,1)
+
+    def _flag_corporate_actions(self, lastdate: date | None) -> bool:
+        """
+        """
+
+    def _build_ticker_objects(self, ticker: str, lastdate: date | None) -> Ticker:
         """
         Builds the objects of the Ticker class.
         """
+        ticker = ticker
+        default_date = date(1900,1,1)
+        update_date = self._find_start_date(lastdate)
+        if lastdate:
+            fullupdate = False
+        else:
+            fullupdate = True
+        return Ticker(
+            ticker = ticker,
+            default_date = default_date,
+            update_date = update_date,
+            check_corporate_actions = True,
+            fullupdate = False,
+            )
 
     def update(self) -> dict[str, date | None]:
         """
