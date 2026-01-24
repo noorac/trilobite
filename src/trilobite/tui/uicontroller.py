@@ -1,16 +1,21 @@
 #uicontroller: event loop, screens, focus, routes keys
 from collections.abc import Callable
 import curses
+import logging
 import time
 
 from trilobite.tui.renderer import Renderer
+from trilobite.tui.uicommands import (
+        CmdQuit, 
+        CmdUpdateAll,
+        Command,
+    )
+
+logger = logging.getLogger(__name__)
 
 class UIController:
-    def __init__(self, stdscr, *, on_update_all: Callable[[], None], on_quit: Callable[[], None] | None = None):
+    def __init__(self, stdscr) -> None:
         self._stdscr = stdscr
-        #Passed functions
-        self._on_update_all = on_update_all
-        self._on_quit = on_quit
 
         #Create windows
         self.create_windows()
@@ -63,55 +68,44 @@ class UIController:
 
         return None
 
-    def run(self) -> None:
+    def run(self) -> Command:
         """
         Main starting point for the whole thing
         """
-        cont = True
-        while cont:
-            cont = self.main_menu()
+        self.title_w.erase()
+        self.main_w.erase()
+        self.status_w.erase()
 
-    def draw_title(self) -> None:
         attr = curses.color_pair(1) | curses.A_UNDERLINE | curses.A_BOLD
         self.title_w.message_centered(self.title_text, attr = attr)
-
-    def draw_menu(self) -> None:
+        self.main_w.message_centered("Awaiting command..")
         self.status_w.message_centered("u: update | q: quit")
+        return self.check_main_menu_ans()
 
-    def check_main_menu_ans(self) -> bool:
+    def check_main_menu_ans(self) -> Command:
         """
         Might change this logic. Just get the key, then pass that key to
         some other function later
         """
-        cont = True
-        ans = self.main_w.getkey(8,1)
-        try:
-            if str(ans) not in [curses.KEY_ENTER ,10 , 13, "\n","", "u", "q"]:
-                self.main_w.message_centered("Not an option..")
-            # if ans == curses.KEY_ENTER or ans == 10 or ans == 13 or ans == "\n":
-            #     #FIX FOR ENTER
-            #     pass
-            if str(ans) == "u":
-                #FIX FOR UPDATE
-                self.main_w.message_centered("Updating all ..", y = 2)
-                self._on_update_all()
-                pass
-            if str(ans) == "q":
-                self.main_w.message_centered("Exiting ..", y = 2)
-                time.sleep(750/1000)
-                cont = False
-        except ValueError:
-            print(f"Not a string")
-        return cont
-
-
-    def main_menu(self) -> bool:
-        cont = True
-        self.main_w.clear()
-        self.draw_title()
-        self.draw_menu()
-        cont = self.check_main_menu_ans()
-        return cont
+        logger.info("Running..")
+        valid_answers = ["u", "q"]
+        while True:
+            #ans comes in as a string
+            ans = self.main_w.getkey(0,0)
+            try:
+                if ans not in valid_answers:
+                    self.main_w.message_centered("Not an option..")
+                    time.sleep(1)
+                if ans == "u":
+                    self.main_w.message_centered("Updating all ..")
+                    return CmdUpdateAll()
+                if ans == "q":
+                    self.main_w.message_centered("Exiting ..")
+                    time.sleep(750/1000)
+                    return CmdQuit()
+            except ValueError:
+                self.main_w.message_centered("Not a string..")
+                return CmdQuit()
 
     def check_if_key_is_enter(self, key: int) -> bool:
         """

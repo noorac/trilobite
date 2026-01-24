@@ -77,16 +77,18 @@ class Renderer:
         for i, line in enumerate(lines):
             self._win.addstr(start_y + i, start_x, line)
 
-    def message_centered(self, text: str, y: int = 0, attr: int = curses.A_NORMAL) -> None:
+    def message_centered(self, text: str, y: int = 0, attr: int = curses.A_NORMAL, erase: bool = True, refresh: bool = True) -> None:
         """Send a message to the center of the screen for a certain amount
             of time. 
         @param text str: the text to be printed
         @param pause_ms int: the amount of time in ms(default 750)
         """
-        self._win.clear()
+        if erase:
+            self._win.erase()
         self.refresh_geometry()
         x = (self.max_w // 2) - (len(text) // 2)
         self._win.addstr(y, max(0, x), text, attr)
-        self._win.refresh()
+        if refresh:
+            self._win.refresh()
 
 

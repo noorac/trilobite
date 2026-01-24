@@ -14,6 +14,7 @@ from trilobite.marketdata.yfclient import YFClient
 from trilobite.marketdata.marketservice import MarketService
 from trilobite.tickers.tickerclient import TickerClient
 from trilobite.tickers.tickerservice import Ticker, TickerService
+from trilobite.tui.uicommands import CmdQuit, CmdUpdateAll
 from trilobite.tui.uicontroller import UIController
 
 logger = logging.getLogger(__name__)
@@ -32,7 +33,7 @@ class App:
     """
     The main app! This object will run most of the program
     """
-    def __init__(self, cfg: AppConfig) -> None:
+    def __init__(self, cfg: AppConfig, stdscr: "curses._CursesWindow") -> None:
         logger.info("Running ..")
 
         self._cfg = cfg
@@ -55,7 +56,7 @@ class App:
         tickerclient = TickerClient()
         ticker = TickerService(repo=repo, tickerclient=tickerclient, cfg=cfg.ticker)
 
-        #UIController wiring
+        self._ui = UIController(stdscr)
 
         #Create AppState
         self._state = AppState(repo=repo, market=market, ticker=ticker)
@@ -112,20 +113,25 @@ class App:
         """
         Runs the update of all tickers after doing an update of todays tickers
         """
-        for ticker in self._state.ticker.update():
+        tickerlist = self._state.ticker.update()
+        for idx, ticker in enumerate(tickerlist):
+            self._ui.main_w.message_centered(f"Updating: {ticker.tickersymbol}", y=1)
+            self._ui.main_w.message_centered(f"{idx}/{len(tickerlist)}", y=2, erase=False)
             self.update_ticker(ticker)
 
-    def run(self, stdscr: "curses._CursesWindow") -> None:
+    def run(self) -> None:
         """
         Starting up the UIController, takes in the stdscr from curses
         """
         logger.info("Running ..")
-        ui = UIController(
-                stdscr,
-                on_update_all=self.update_all,
-                on_quit=self.close,
-        )
-        ui.run()
+        cont = True
+        while cont:
+            cmd = self._ui.run()
+            match cmd:
+                case CmdUpdateAll():
+                    self.update_all()
+                case CmdQuit():
+                    cont = False
         self.close()
         return None
 

@@ -13,9 +13,25 @@ def _curses_main(stdscr: "curses._CursesWindow") -> None:
     """
     Runs inside curses.wrapper() and starts the actual application
     """
+    try:
+        curses.curs_set(0)
+    except curses.error:
+        pass
+
+    curses.noecho()
+    curses.cbreak()
+    stdscr.keypad(True)
+
+    if curses.has_colors():
+        curses.start_color()
+        curses.use_default_colors()
+
+    stdscr.clear()
+    stdscr.refresh()
+
     cfg = load_config()
-    app = App(cfg)
-    app.run(stdscr)
+    app = App(cfg, stdscr)
+    app.run()
 
 
 def main() -> NoReturn:
