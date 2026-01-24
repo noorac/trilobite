@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List
+from typing import Callable, List
 from dataclasses import dataclass, replace
 from datetime import date, timedelta
 from pandas import DataFrame
@@ -14,6 +14,7 @@ from trilobite.marketdata.yfclient import YFClient
 from trilobite.marketdata.marketservice import MarketService
 from trilobite.tickers.tickerclient import TickerClient
 from trilobite.tickers.tickerservice import Ticker, TickerService
+from trilobite.tui.uicontroller import UIController
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,8 @@ class App:
         # Ticker wiring
         tickerclient = TickerClient()
         ticker = TickerService(repo=repo, tickerclient=tickerclient, cfg=cfg.ticker)
+
+        #UIController wiring
 
         #Create AppState
         self._state = AppState(repo=repo, market=market, ticker=ticker)
@@ -105,16 +108,24 @@ class App:
         count = affected if affected > 0 else len(df.index)
         logger.info(f"Updated: {ticker.tickersymbol} , from date {ticker.update_date}, with {count} rows added")
 
+    def update_all(self) -> None:
+        """
+        Runs the update of all tickers after doing an update of todays tickers
+        """
+        for ticker in self._state.ticker.update():
+            self.update_ticker(ticker)
 
     def run(self, stdscr: "curses._CursesWindow") -> None:
         """
         Starting up the UIController, takes in the stdscr from curses
         """
         logger.info("Running ..")
-        # TEMP TESTING
-        for ticker in self._state.ticker.update():
-            self.update_ticker(ticker)
+        ui = UIController(
+                stdscr,
+                on_update_all=self.update_all,
+                on_quit=self.close,
+        )
+        ui.run()
         self.close()
-        # END TEMP TESTING
         return None
 
