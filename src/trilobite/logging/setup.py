@@ -12,7 +12,7 @@ def setup_logging(level: int = logging.INFO) -> None:
 
     Sets the path for all future logs to logs/trilobite.log
     """
-    log_file: Path = logs_dir() / "trilobite.log"
+    last_run_file: Path = logs_dir() / "trilobite.log"
     history_file: Path = logs_dir() / "trilobite_history.log"
 
     #create the parent logger
@@ -22,6 +22,7 @@ def setup_logging(level: int = logging.INFO) -> None:
     #remove existing handlers from logging.basicConfig
     root_logger.handlers.clear()
 
+    #Setup History logging
     formatter = logging.Formatter(
             fmt="%(asctime)s %(levelname)s %(name)s: %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
@@ -37,12 +38,13 @@ def setup_logging(level: int = logging.INFO) -> None:
     history_handler.setFormatter(formatter)
     root_logger.addHandler(history_handler)
 
-    file_handler = logging.FileHandler(
-        log_file,
+    #Setup last run logging
+    last_run_handler = logging.FileHandler(
+        last_run_file,
+        mode="w",
         encoding="utf-8",
     )
-    file_handler.setLevel(level)
-    file_handler.setFormatter(formatter)
-
-    root_logger.addHandler(file_handler)
+    last_run_handler.setLevel(level)
+    last_run_handler.setFormatter(formatter)
+    root_logger.addHandler(last_run_handler)
     return None
