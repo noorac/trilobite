@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Protocol
+from datetime import date
 
 @dataclass(frozen=True)
 class TickerUpdate:
@@ -8,11 +10,19 @@ class TickerUpdate:
     Contains data about updates
     """
 
+class TickerRepo(Protocol):
+    """
+    Protocol that allows for insertion of the last_ohlcv_date_by_ticker method
+    into TickerService
+    """
+    def last_ohlcv_date_by_ticker(self) -> dict[str, date | None]:
+        ...
+
 class TickerService:
     """
     Keeps track of tickers
     """
-    def __init__(self) -> None:
+    def __init__(self, repo: TickerRepo, tickerclient: TickerClient) -> None:
         self._ticker_list = []
         self._ticker_dict = {}
 
