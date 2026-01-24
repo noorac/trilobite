@@ -1,6 +1,5 @@
-
-
-import urllib
+import urllib.request
+import json
 
 
 class TickerClient:
@@ -26,3 +25,11 @@ class TickerClient:
         nasdaq = _fetch(self.NASDAQ_URL)
         nyse = _fetch(self.NYSE_URL)
         amex = _fetch(self.AMEX_URL)
+
+        seen: set[str] = set()
+        combined: list[str] = []
+        for t in nasdaq + nyse + amex:
+            if t and t not in seen:
+                seen.add(t)
+                combined.append(t)
+        return combined
