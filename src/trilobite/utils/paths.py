@@ -44,3 +44,13 @@ def tmp_dir(create: bool = True) -> Path:
     if create:
         path.mkdir(parents=True, exist_ok=True)
     return path
+
+def config_dir(create: bool = True) -> Path:
+    """
+    Returns a path object for the config directory
+    """
+    path = Path("~/.config/trilobite").expanduser()
+    if create:
+        path.mkdir(parents=True, exist_ok=True)
+    return path
+
