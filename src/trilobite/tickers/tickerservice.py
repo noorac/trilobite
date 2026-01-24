@@ -16,12 +16,14 @@ class TickerRepo(Protocol):
         ...
 
 @dataclass(frozen=True)
-class TickerUpdate:
+class Ticker:
     """
     Contains data on tickers
     """
     ticker: str
+    start_date: date
     lastdate: date | None
+    check_corporate_actions: bool
 
 
 class TickerService:
@@ -53,6 +55,11 @@ class TickerService:
             if key in set(self._ticker_list)
         }
 
+    def _build_ticker_objects(self, ticker: str, lastdate: date | None) -> None:
+        """
+        Builds the objects of the Ticker class.
+        """
+
     def update(self) -> dict[str, date | None]:
         """
         Runs a full update: gets a list[str] from tickerclient with current
@@ -72,6 +79,10 @@ class TickerService:
 
         self._populate_missing_tickers()
         self._prune_missing_tickers()
+
+        tickermap = []
+        for key, val in self._ticker_dict.items():
+            tickermap.append(self._build_ticker_objects(ticker=key, lastdate=val))
 
         #Update to dataclass object later?
         return self._ticker_dict
