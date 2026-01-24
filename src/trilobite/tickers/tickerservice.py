@@ -16,6 +16,15 @@ class TickerRepo(Protocol):
     def last_ohlcv_date_by_ticker(self) -> dict[str, date | None]:
         ...
 
+    def ensure_instrument(self, ticker: str) -> int:
+        ...
+
+    def list_active_tickers(self) -> list[str]:
+        ...
+
+    def deactivate_tickers(self, tickers: list[str]) -> int:
+        ...
+
 @dataclass(frozen=True)
 class Ticker:
     """
