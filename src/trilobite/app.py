@@ -32,7 +32,7 @@ class App:
     The main app! This object will run most of the program
     """
     def __init__(self, cfg: AppConfig) -> None:
-        logger.info("Initializing ..")
+        logger.info("Running __init__")
 
         self._cfg = cfg
 
@@ -92,10 +92,10 @@ class App:
         - Ticker object containing ticker symbol, update_date, 
         check_for_corporate_actions flag
         """
-        instrument_id = self._state.repo.ensure_instrument(ticker.tickersymbol)
         df = self._state.market.get_ohlcv(ticker.tickersymbol, ticker.update_date)
 
         if ticker.check_corporate_actions and self.detect_corporate_action(df):
+            logger.info(f"Detected corporate actions, re-running with default date")
             fullupdate = replace(
                     ticker,
                     update_date = self._cfg.ticker.default_date,
@@ -103,10 +103,10 @@ class App:
             )
             return self.update_ticker(fullupdate)
 
+        instrument_id = self._state.repo.ensure_instrument(ticker.tickersymbol)
         affected = self._state.repo.upsert_ohlcv_daily(instrument_id=instrument_id, df = df)
-        #Number of affected rows
         count = affected if affected > 0 else len(df.index)
-        logger.info(f"Updating {ticker.tickersymbol} from {ticker.update_date}, {count} added")
+        logger.info(f"Updated: {ticker.tickersymbol} , from date {ticker.update_date}, with {count} rows added")
 
 
     def run(self, stdscr: "curses._CursesWindow") -> None:
