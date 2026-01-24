@@ -20,6 +20,9 @@ class TickerUpdate:
     """
     Contains data about updates
     """
+    ticker: str
+    lastdate: date | None
+
 
 class TickerService:
     """
@@ -32,57 +35,23 @@ class TickerService:
         self._ticker_list: list[str] = []
         self._ticker_dict: dict[str, date | None] = {}
 
-    def update_ticker_list(self, fresh_ticker_list: list[str]) -> None:
-        """
-        The list of actual active tickers on the stock market
-
-        Params:
-        - fresh_ticker_list: a list of strings where each string is a ticker
-        """
-        self._ticker_list = fresh_ticker_list
-        return None
-
-    def update_stored_tickers(self, stored_ticker_dict: dict) -> None:
-        """
-        Stores a dict of current tickers in the database
-
-        Params:
-        - stored_ticker_dict: the dict of currently stored tickers. With the key
-        being the ticker, and the value being a date object of the last date 
-        the ticker was updated
-        """
-        self._ticker_dict = stored_ticker_dict
-        return None
-
-    def populate_ticker_dict_with_fresh_tickers(self) -> None:
+    def _populate_missing_tickers(self) -> None:
         """
         Incorporates the tickers from _ticker_list into _ticker_dict with 
         default value None as value for each key
         """
         for ticker in self._ticker_list:
             self._ticker_dict.setdefault(ticker, None)
-        return None
 
-    def prune_ticker_dict_with_fresh_tickers(self) -> None:
+    def _prune_missing_tickers(self) -> None:
         """
         Removes entries from _ticker_dict if they are not also in _ticker_list
         """
         self._ticker_dict = {
             key: val 
             for key, val in self._ticker_dict.items()
-            if key in self._ticker_list
+            if key in set(self._ticker_list)
         }
-        return None
-
-    def return_tickers(self, fresh_ticker_list: list[str], stored_ticker_dict: dict) -> dict:
-        """
-        Builds the updated tickers dict by calling methods in TickerService
-        """
-        self.update_ticker_list(fresh_ticker_list)
-        self.update_stored_tickers(stored_ticker_dict)
-        self.populate_ticker_dict_with_fresh_tickers()
-        self.prune_ticker_dict_with_fresh_tickers()
-        return self._ticker_dict
 
     def update(self) -> dict[str, date | None]:
         """
@@ -93,6 +62,9 @@ class TickerService:
         #Temp used for testing during dev
         self._ticker_list = ["AAPL", "GOOGL", "DIS", "NVDA", "CAT", "META", "TSLA"]
         self._ticker_dict = self._repo.last_ohlcv_date_by_ticker()
+
+        self._populate_missing_tickers()
+        self._prune_missing_tickers()
 
         #Update to dataclass object later?
         return self._ticker_dict
