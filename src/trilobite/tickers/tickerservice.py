@@ -18,7 +18,7 @@ class TickerRepo(Protocol):
 @dataclass(frozen=True)
 class TickerUpdate:
     """
-    Contains data about updates
+    Contains data on tickers
     """
     ticker: str
     lastdate: date | None
@@ -26,7 +26,7 @@ class TickerUpdate:
 
 class TickerService:
     """
-    Keeps track of tickers
+    Keeps track of currently active tickers on the market
     """
     def __init__(self, repo: TickerRepo, tickerclient: TickerClient) -> None:
         self._repo = repo
@@ -55,7 +55,14 @@ class TickerService:
 
     def update(self) -> dict[str, date | None]:
         """
-        Runs the methods to get updates 
+        Runs a full update: gets a list[str] from tickerclient with current
+        active tickers, gets dict{key:ticker,value:date_of_last_entry} from the
+        DB, populates the dict with new tickers that are in the list but not the
+        dict, then prunes no longer active tickers that are in the dict but not
+        in the list.
+
+        Returns:
+        - dict{key:ticker, value:date_of_last_entry}
         """
         self._ticker_list = self._tickerclient.get_todays_tickers()
         
