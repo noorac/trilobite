@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Protocol
 from datetime import date
 
-from trilobite.app import CFGTickerService
+#from trilobite.app import CFGTickerService
 from trilobite.tickers.tickerclient import TickerClient
 
 
@@ -92,7 +92,7 @@ class TickerService:
             check_corporate_actions = self._flag_lastdate(lastdate),
             )
 
-    def update(self, fullupdate=False) -> dict[str, date | None]:
+    def update(self, fullupdate=False) -> list[Ticker]:
         """
         Runs a full update: gets a list[str] from tickerclient with current
         active tickers, gets dict{key:ticker,value:date_of_last_entry} from the
@@ -124,4 +124,4 @@ class TickerService:
             tickermap.append(self._build_ticker_objects(tickersymbol=key, lastdate=val))
 
         #Update to dataclass object later?
-        return self._ticker_dict
+        return tickermap

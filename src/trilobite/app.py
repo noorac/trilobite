@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import List
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 from pandas import DataFrame
 import logging
@@ -14,7 +14,7 @@ from trilobite.db.schema import create_schema
 from trilobite.marketdata.yfclient import YFClient
 from trilobite.marketdata.marketservice import MarketService
 from trilobite.tickers.tickerclient import TickerClient
-from trilobite.tickers.tickerservice import TickerService
+from trilobite.tickers.tickerservice import Ticker, TickerService
 
 logger = logging.getLogger(__name__)
 
@@ -84,24 +84,30 @@ class App:
         """
         return ((df["dividends"] != 0.0).any() or (df["stocksplits"] != 0.0).any())
 
-    def update_ticker(self, ticker: str, start_date: date | None) -> None:
+    def update_ticker(self, ticker: Ticker) -> None:
         """
-        Updates the tickers
+        Performs an update of the data for the given ticker
+
+        Params:
+        - Ticker object containing ticker symbol, update_date, 
+        check_for_corporate_actions flag
         """
-        start_date, check_for_corporate_action = (start_date, True) if start_date is not None else (date(1900,1,1), False)
+        instrument_id = self._state.repo.ensure_instrument(ticker.tickersymbol)
+        df = self._state.market.get_ohlcv(ticker.tickersymbol, ticker.update_date)
 
-        instrument_id = self._state.repo.ensure_instrument(ticker)
-        df = self._state.market.get_ohlcv(ticker, start_date)
-        if check_for_corporate_action:
-            if self.detect_corporate_action(df):
-                self.update_ticker(ticker, date(1900,1,1))
+        if ticker.check_corporate_actions and self.detect_corporate_action(df):
+            fullupdate = replace(
+                    ticker,
+                    update_date = self.cfgtickerservice.default_date,
+                    check_corporate_actions = False,
+            )
+            return self.update_ticker(fullupdate)
 
-        #Ingest the data in the DB
         affected = self._state.repo.upsert_ohlcv_daily(instrument_id=instrument_id, df = df)
         #Number of affected rows
         count = affected if affected > 0 else len(df.index)
         logger.info(f"{ticker}: {count} added")
-        return None
+
 
     def run(self, stdscr: "curses._CursesWindow") -> None:
         """
@@ -109,13 +115,8 @@ class App:
         """
         logger.info("Starting curses..")
         # TEMP TESTING
-        ticker_dict = self._state.ticker.update()
-        for ticker, start_date in ticker_dict.items():
-            self.update_ticker(
-                    ticker,
-                    start_date,
-            )
-
+        for ticker in self._state.ticker.update():
+            self.update_ticker(ticker)
         self.close()
         # END TEMP TESTING
         return None
