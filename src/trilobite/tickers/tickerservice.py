@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Protocol
-from datetime import date
+from datetime import date, timedelta
 
 from trilobite.config.models import CFGTickerService
 from trilobite.tickers.tickerclient import TickerClient
@@ -68,7 +68,7 @@ class TickerService:
         Returns:
         - date object, lastdate if not None, default set in cfg if None
         """
-        return lastdate if lastdate is not None else self._cfg.default_date
+        return (lastdate-timedelta(self._cfg.default_timedelta)) if lastdate is not None else self._cfg.default_date
 
     def _flag_lastdate(self, lastdate: date | None) -> bool:
         """
@@ -88,7 +88,7 @@ class TickerService:
         """
         return Ticker(
             tickersymbol = tickersymbol,
-            update_date = self._find_start_date(lastdate)-timedelta(self._cfg.default_timedelta),
+            update_date = self._find_start_date(lastdate),
             check_corporate_actions = self._flag_lastdate(lastdate),
             )
 
