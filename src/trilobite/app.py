@@ -2,12 +2,11 @@ from __future__ import annotations
 
 from typing import List
 from dataclasses import dataclass, replace
-from datetime import date
+from datetime import date, timedelta
 from pandas import DataFrame
 import logging
-import json
-import urllib.request
 
+from trilobite.config.models import CFGTickerService
 from trilobite.db.connect import connect
 from trilobite.db.repo import MarketRepo
 from trilobite.db.schema import create_schema
@@ -18,12 +17,6 @@ from trilobite.tickers.tickerservice import Ticker, TickerService
 
 logger = logging.getLogger(__name__)
 
-@dataclass(frozen=True)
-class CFGTickerService:
-    """
-    Stores config settings for TickerService
-    """
-    default_date: date
 
 @dataclass
 class AppState:
@@ -42,7 +35,8 @@ class App:
         logger.info("Initializing ..")
 
         #CFG stuff hardcoded for now
-        self.cfgtickerservice = CFGTickerService(default_date=date(1900,1,1))
+        #self.cfgtickerservice = CFGTickerService(default_date=date(1900,1,1))
+        self.cfgtickerservice = CFGTickerService(default_date=date(1900,1,1), default_timedelta=10)
 
         # DB wiring
         self._conn = connect()
@@ -106,7 +100,7 @@ class App:
         affected = self._state.repo.upsert_ohlcv_daily(instrument_id=instrument_id, df = df)
         #Number of affected rows
         count = affected if affected > 0 else len(df.index)
-        logger.info(f"{ticker}: {count} added")
+        logger.info(f"Updating {ticker.tickersymbol} from {ticker.update_date}, {count} added")
 
 
     def run(self, stdscr: "curses._CursesWindow") -> None:

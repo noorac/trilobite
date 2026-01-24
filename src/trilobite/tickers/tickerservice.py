@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Protocol
 from datetime import date
 
-#from trilobite.app import CFGTickerService
+from trilobite.config.models import CFGTickerService
 from trilobite.tickers.tickerclient import TickerClient
 
 
@@ -88,7 +88,7 @@ class TickerService:
         """
         return Ticker(
             tickersymbol = tickersymbol,
-            update_date = self._find_start_date(lastdate),
+            update_date = self._find_start_date(lastdate)-timedelta(self._cfg.default_timedelta),
             check_corporate_actions = self._flag_lastdate(lastdate),
             )
 
