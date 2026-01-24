@@ -44,7 +44,7 @@ def main() -> NoReturn:
         sys.exit(130)
     except Exception:
         # Any uncaught exceptions are logged before dying
-        logger.exception("Fatal error")
+        logger.exception("---FATAL ERROR---")
         sys.exit(1)
 
     sys.exit(0)
