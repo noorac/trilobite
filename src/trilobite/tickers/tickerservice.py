@@ -143,10 +143,11 @@ class TickerService:
         self._ticker_list = self._tickerclient.get_todays_tickers()
         
         #Temp used for testing during dev
-        tmplist =  ["AAPL", "GOOGL", "DIS", "NVDA", "CAT", "META", "TSLA"] + self._ticker_list[:15]
+        tmplist =  ["AAPL", "GOOGL", "DIS", "NVDA", "CAT", "META", "TSLA"] + self._ticker_list[:12]
         self._ticker_list = tmplist
 
         deactivated = self._reconsile_instruments(self._ticker_list)
+        logger.info(f"The following tickers were deactivated: {deactivated}")
 
         self._ticker_dict = self._repo.last_ohlcv_date_by_ticker()
 
