@@ -17,7 +17,7 @@ def load_config(cfg: dict[str, str]) -> AppConfig:
 
     ticker_cfg = CFGTickerService(
         default_date=date.fromisoformat(cfg.get("default_date", "1900-01-01")),
-        default_timedelta=int(cfg.get("default_timedelta", 10)),
+        default_timedelta=int(cfg.get("default_timedelta", 1)),
     )
 
     db_cfg = CFGDataBase(
