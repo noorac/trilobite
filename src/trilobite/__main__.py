@@ -13,7 +13,7 @@ def _curses_main(stdscr: "curses._CursesWindow") -> None:
     """
     Runs inside curses.wrapper() and starts the actual application
     """
-    cfg = load_config({})
+    cfg = load_config()
     app = App(cfg)
     app.run(stdscr)
 
