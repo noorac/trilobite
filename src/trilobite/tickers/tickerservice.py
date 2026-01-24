@@ -3,10 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 from datetime import date, timedelta
+import logging
 
 from trilobite.config.models import CFGTickerService
 from trilobite.tickers.tickerclient import TickerClient
 
+logger = logging.getLogger(__name__)
 
 class TickerRepo(Protocol):
     """
@@ -141,10 +143,11 @@ class TickerService:
         self._ticker_list = self._tickerclient.get_todays_tickers()
         
         #Temp used for testing during dev
-        tmplist =  ["AAPL", "GOOGL", "DIS", "NVDA", "CAT", "META", "TSLA"] + self._ticker_list[:15]
+        tmplist =  ["AAPL", "GOOGL", "DIS", "NVDA", "CAT", "META", "TSLA"] + self._ticker_list[:12]
         self._ticker_list = tmplist
 
         deactivated = self._reconsile_instruments(self._ticker_list)
+        logger.info(f"The following tickers were deactivated: {deactivated}")
 
         self._ticker_dict = self._repo.last_ohlcv_date_by_ticker()
 
@@ -152,6 +155,7 @@ class TickerService:
         self._prune_missing_tickers()
 
         if fullupdate:
+            logger.info(f"fullupdate True: Resetting all dates to None")
             for key, val in self._ticker_dict.items():
                 self._ticker_dict[key] = None
 
