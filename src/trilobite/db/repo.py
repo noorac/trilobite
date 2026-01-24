@@ -65,9 +65,13 @@ class MarketRepo:
         with self.conn.cursor(row_factory=tuple_row) as cur:
             cur.execute(
                 """
-                INSERT INTO instrument (ticker)
-                VALUES (%s)
-                ON CONFLICT (ticker) DO UPDATE SET ticker = EXCLUDED.ticker
+                INSERT INTO instrument (ticker, is_active, last_seen, deactivated_at)
+                VALUES (%s, TRUE, CURRENT_DATE, NULL)
+                ON CONFLICT (ticker) DO UPDATE SET 
+                    ticker = EXCLUDED.ticker,
+                    is_active = TRUE,
+                    last_seen = CURRENT_DATE,
+                    deactivated_at = NULL
                 RETURNING id;
                 """,
                 (ticker,),
@@ -171,5 +175,45 @@ class MarketRepo:
             rows: list[tuple[str, date | None]] = cur.fetchall()
 
         return dict(rows)
+
+    def list_active_tickers(self) -> list[str]:
+        """
+        Returns all tickers currently marked as active in the DB
+        """
+        sql = """
+        SELECT ticker
+        FROM instrument
+        WHERE is_active = TRUE
+        ORDER BY ticker;
+        """
+        with self.conn.cursor(row_factory=tuple_row) as cur:
+            cur.execute(sql)
+            rows: list[tuple[str]] = cur.fetchall()
+        return [t for (t,) in rows]
+
+    def deactivate_tickers(self, tickers: list[str]) -> int:
+        """
+        Marks the given tickers as inactive, if currently active
+
+        Returns number of rows updated
+        """
+        cleaned = sorted({t.strip().upper() for t in tickers if t and t.strip()})
+        if not cleaned:
+            return 0
+        
+        sql = """
+        UPDATE instrument
+        SET is_active = FALSE,
+            deactivated_at = CURRENT_DATE
+        WHERE ticker = ANY(%s)
+            AND is_active = TRUE;
+        """
+
+        with self.conn.cursor() as cur:
+            cur.execute(sql, (cleaned,))
+            affected = cur.rowcount
+
+        self.conn.commit()
+        return 0 if affected is None or affected < 0 else int(affected)
 
 
