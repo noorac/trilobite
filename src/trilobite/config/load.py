@@ -52,7 +52,7 @@ def _strip_inline_comment(line: str) -> str:
         return ""
     return line.split("#", 1)[0].strip()
 
-def load_config_file(filepath: Path) -> dict[str, str]:
+def _load_config_file(filepath: Path) -> dict[str, str]:
     """
     Loads the actual config file as a raw string key/value pairs
 
@@ -79,7 +79,7 @@ def load_config_file(filepath: Path) -> dict[str, str]:
             cfg[key] = val
     return cfg
 
-def generate_config_file(filepath: Path) -> None:
+def _generate_config_file(filepath: Path) -> None:
     """
     Generates a new config file if one doesn't exist, using default values
     """
@@ -87,6 +87,23 @@ def generate_config_file(filepath: Path) -> None:
     filepath.parent.mkdir(parents=True, exist_ok=True)
     with filepath.open("w", encoding="utf-8") as f:
         f.write(CONFIG_TEMPLATE)
+
+def _get_int(cfg: dict[str, str], key: str) -> int:
+    raw = cfg.get(key, DEFAULTS[key]).strip()
+    try:
+        return int(raw)
+    except ValueError:
+        logger.warning(f"Invalid int for {key} = {raw}, defaulting to {DEFAULTS[key]}")
+        return int(DEFAULTS[key])
+
+def _get_str(cfg: dict[str, str], key: str) -> str:
+    return cfg.get(key, DEFAULTS[key]).strip()
+
+def _get_optional_str(cfg: dict[str, str], key: str) -> str | None:
+    raw = _get_str(cfg, key)
+    if raw == "" or raw.lower() in {"none", "null"}:
+        return None
+    return raw
 
 def load_config() -> AppConfig:
     """
@@ -97,22 +114,22 @@ def load_config() -> AppConfig:
     """
     filepath = config_dir() / CONFIG_FILENAME
 
-    if filepath.is_file():
+    if not filepath.is_file():
         logger.info("Config not found. Generating default config")
-        generate_config_file(filepath)
+        _generate_config_file(filepath)
 
-    cfg = load_config_file(filepath)
+    cfg = _load_config_file(filepath)
 
     ticker_cfg = CFGTickerService(
         default_date=date.fromisoformat(cfg.get("default_date", DEFAULTS["default_date"])),
-        default_timedelta=int(cfg.get("default_timedelta", DEFAULTS["default_timedelta"])),
+        default_timedelta=_get_int(cfg, "default_timedelta"),
     )
 
     db_cfg = CFGDataBase(
-        dbname=cfg.get("dbname", DEFAULTS["dbname"]),
-        host=cfg.get("host", DEFAULTS["host"]),
-        user=cfg.get("user", None),
-        port=int(cfg.get("port", DEFAULTS["port"])),
+        dbname=_get_str(cfg, "dbname"),
+        host=_get_str(cfg, "host"),
+        user=_get_optional_str(cfg, "user"),
+        port=_get_int(cfg, "port"),
     )
 
     return AppConfig(

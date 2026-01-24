@@ -36,9 +36,6 @@ class App:
 
         self._cfg = cfg
 
-        #CFG stuff hardcoded for now
-        #self.cfgtickerservice = CFGTickerService(default_date=date(1900,1,1), default_timedelta=10)
-
         # DB wiring
         self._conn = connect(DbSettings(
             dbname=cfg.db.dbname,
