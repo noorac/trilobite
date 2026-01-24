@@ -16,6 +16,15 @@ class TickerRepo(Protocol):
     def last_ohlcv_date_by_ticker(self) -> dict[str, date | None]:
         ...
 
+    def ensure_instrument(self, ticker: str) -> int:
+        ...
+
+    def list_active_tickers(self) -> list[str]:
+        ...
+
+    def deactivate_tickers(self, tickers: list[str]) -> int:
+        ...
+
 @dataclass(frozen=True)
 class Ticker:
     """
@@ -92,6 +101,29 @@ class TickerService:
             check_corporate_actions = self._flag_lastdate(lastdate),
             )
 
+    def _reconsile_instruments(self, todays_tickers: list[str]) -> list[str]:
+        """
+        Ensure todays tickers exist, and are active in the DB, and deactivate DB
+        tickers that are active but missing from todays list.
+
+        Params:
+        - list: todays list of true and real active tickers
+
+        Returns:
+        - list: tickers that were missing and got deactivated
+        """
+        todays_set = {t.strip().upper() for t in todays_tickers if t and t.strip()}
+        for t in todays_set:
+            self._repo.ensure_instrument(t)
+
+        active_db = set(self._repo.list_active_tickers())
+        missing = sorted(active_db - todays_set)
+
+        if missing:
+            self._repo.deactivate_tickers(missing)
+
+        return missing
+
     def update(self, fullupdate=False) -> list[Ticker]:
         """
         Runs a full update: gets a list[str] from tickerclient with current
@@ -109,7 +141,11 @@ class TickerService:
         self._ticker_list = self._tickerclient.get_todays_tickers()
         
         #Temp used for testing during dev
-        self._ticker_list = ["AAPL", "GOOGL", "DIS", "NVDA", "CAT", "META", "TSLA"]
+        tmplist =  ["AAPL", "GOOGL", "DIS", "NVDA", "CAT", "META", "TSLA"] + self._ticker_list[:15]
+        self._ticker_list = tmplist
+
+        deactivated = self._reconsile_instruments(self._ticker_list)
+
         self._ticker_dict = self._repo.last_ohlcv_date_by_ticker()
 
         self._populate_missing_tickers()

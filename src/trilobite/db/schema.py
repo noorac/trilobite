@@ -5,7 +5,10 @@ import psycopg
 DDL= """
 CREATE TABLE IF NOT EXISTS instrument (
     id BIGSERIAL PRIMARY KEY,
-    ticker TEXT NOT NULL UNIQUE
+    ticker TEXT NOT NULL UNIQUE,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    last_seen DATE,
+    deactivated_at DATE
 );
 
 CREATE TABLE IF NOT EXISTS ohlcv_daily (

@@ -1,6 +1,9 @@
 from datetime import date
+import logging
 import yfinance as yf
 from pandas import DataFrame
+
+logger = logging.getLogger(__name__)
 
 class YFClient:
     """
