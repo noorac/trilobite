@@ -18,6 +18,13 @@ from trilobite.tickers.tickerservice import TickerService
 
 logger = logging.getLogger(__name__)
 
+@dataclass(frozen=True)
+class CFGTickerService:
+    """
+    Stores config settings for TickerService
+    """
+    default_date: date
+
 @dataclass
 class AppState:
     """
@@ -34,6 +41,9 @@ class App:
     def __init__(self) -> None:
         logger.info("Initializing ..")
 
+        #CFG stuff hardcoded for now
+        self.cfgtickerservice = CFGTickerService(default_date=date(1900,1,1))
+
         # DB wiring
         self._conn = connect()
         create_schema(self._conn)
@@ -45,7 +55,7 @@ class App:
 
         # Ticker wiring
         tickerclient = TickerClient()
-        ticker = TickerService(repo=repo, tickerclient=tickerclient)
+        ticker = TickerService(repo=repo, tickerclient=tickerclient, cfg=self.cfgtickerservice)
 
         #Create AppState
         self._state = AppState(repo=repo, market=market, ticker=ticker)

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Protocol
 from datetime import date
 
+from trilobite.app import CFGTickerService
 from trilobite.tickers.tickerclient import TickerClient
 
 
@@ -20,20 +21,19 @@ class Ticker:
     """
     Contains data on tickers
     """
-    ticker: str
-    default_date: date
-    update_date: date | None
+    tickersymbol: str
+    update_date: date 
     check_corporate_actions: bool
-    fullupdate: bool
 
 
 class TickerService:
     """
     Keeps track of currently active tickers on the market
     """
-    def __init__(self, repo: TickerRepo, tickerclient: TickerClient) -> None:
+    def __init__(self, repo: TickerRepo, tickerclient: TickerClient, cfg: CFGTickerService) -> None:
         self._repo = repo
         self._tickerclient = tickerclient
+        self._cfg = cfg
 
         self._ticker_list: list[str] = []
         self._ticker_dict: dict[str, date | None] = {}
@@ -66,40 +66,42 @@ class TickerService:
         stored, or None if it doesn't exist
 
         Returns:
-        - date object, lastdate if not None, default date(1900,1,1) if None
+        - date object, lastdate if not None, default set in cfg if None
         """
-        return lastdate if lastdate is not None else date(1900,1,1)
+        return lastdate if lastdate is not None else self._cfg.default_date
 
-    def _flag_corporate_actions(self, lastdate: date | None) -> bool:
+    def _flag_lastdate(self, lastdate: date | None) -> bool:
         """
-        """
+        Returns True or False based on if the lastdate is date object or None
 
-    def _build_ticker_objects(self, ticker: str, lastdate: date | None) -> Ticker:
+        Params:
+        - lastdate: date object or None
+
+        Returns:
+        - bool: True if lastdate is date, False if lastdate is None
+        """
+        return True if lastdate is not None else False
+
+    def _build_ticker_objects(self, tickersymbol: str, lastdate: date | None) -> Ticker:
         """
         Builds the objects of the Ticker class.
         """
-        ticker = ticker
-        default_date = date(1900,1,1)
-        update_date = self._find_start_date(lastdate)
-        if lastdate:
-            fullupdate = False
-        else:
-            fullupdate = True
         return Ticker(
-            ticker = ticker,
-            default_date = default_date,
-            update_date = update_date,
-            check_corporate_actions = True,
-            fullupdate = False,
+            tickersymbol = tickersymbol,
+            update_date = self._find_start_date(lastdate),
+            check_corporate_actions = self._flag_lastdate(lastdate),
             )
 
-    def update(self) -> dict[str, date | None]:
+    def update(self, fullupdate=False) -> dict[str, date | None]:
         """
         Runs a full update: gets a list[str] from tickerclient with current
         active tickers, gets dict{key:ticker,value:date_of_last_entry} from the
         DB, populates the dict with new tickers that are in the list but not the
         dict, then prunes no longer active tickers that are in the dict but not
         in the list.
+
+        Params:
+        - fullupdate: requests fullupdate of every ticker to do a hard reset
 
         Returns:
         - dict{key:ticker, value:date_of_last_entry}
@@ -113,9 +115,13 @@ class TickerService:
         self._populate_missing_tickers()
         self._prune_missing_tickers()
 
+        if fullupdate:
+            for key, val in self._ticker_dict.items():
+                self._ticker_dict[key] = None
+
         tickermap = []
         for key, val in self._ticker_dict.items():
-            tickermap.append(self._build_ticker_objects(ticker=key, lastdate=val))
+            tickermap.append(self._build_ticker_objects(tickersymbol=key, lastdate=val))
 
         #Update to dataclass object later?
         return self._ticker_dict
