@@ -31,6 +31,9 @@ CREATE INDEX IF NOT EXISTS idx_ohlcv_daily_date
 
 CREATE INDEX IF NOT EXISTS idx_instrument_ticker
     ON instrument(ticker);
+
+CREATE INDEX IF NOT EXISTS idx_ohlcv_daily_instrument_date
+    ON ohlcv_daily(instrument_id, date);
 """
 
 def create_schema(conn: psycopg.Connection) -> None:
