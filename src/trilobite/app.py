@@ -14,7 +14,18 @@ from trilobite.marketdata.yfclient import YFClient
 from trilobite.marketdata.marketservice import MarketService
 from trilobite.tickers.tickerclient import TickerClient
 from trilobite.tickers.tickerservice import Ticker, TickerService
-from trilobite.tui.uicommands import CmdQuit, CmdUpdateAll
+from trilobite.commands.uicommands import (
+    CmdNotAnOption, 
+    CmdQuit, 
+    CmdUpdateAll,
+    Command, 
+)
+from trilobite.events.uievents import (
+    EvtStartUp,
+    EvtStatus, 
+    EvtProgress,
+    Event, 
+)
 from trilobite.tui.uicontroller import UIController
 
 logger = logging.getLogger(__name__)
@@ -33,7 +44,7 @@ class App:
     """
     The main app! This object will run most of the program
     """
-    def __init__(self, cfg: AppConfig, stdscr: "curses._CursesWindow") -> None:
+    def __init__(self, cfg: AppConfig) -> None:
         logger.info("Running ..")
 
         self._cfg = cfg
@@ -55,8 +66,6 @@ class App:
         # Ticker wiring
         tickerclient = TickerClient()
         ticker = TickerService(repo=repo, tickerclient=tickerclient, cfg=cfg.ticker)
-
-        self._ui = UIController(stdscr)
 
         #Create AppState
         self._state = AppState(repo=repo, market=market, ticker=ticker)
@@ -115,23 +124,71 @@ class App:
         """
         tickerlist = self._state.ticker.update()
         for idx, ticker in enumerate(tickerlist):
-            self._ui.main_w.message_centered(f"Updating: {ticker.tickersymbol}", y=1)
-            self._ui.main_w.message_centered(f"{idx}/{len(tickerlist)}", y=2, erase=False)
             self.update_ticker(ticker)
+    
+    def _handle_update_all(self):
+        """
+        Handles update all situation
+        """
+        tickers = self._state.ticker.update()
+        total = len(tickers)
 
-    def run(self) -> None:
+        if total == 0:
+            yield EvtStatus("No tickers found", waittime=1)
+            return
+
+        yield EvtStatus("Starting update of all tickers", waittime=1)
+        yield EvtProgress("Preparing", 0, total)
+
+        for i, ticker, in enumerate(tickers, start=1):
+            yield EvtStatus(ticker.tickersymbol)
+            yield EvtProgress(f"Downloading: ", i-1, total)
+
+            try:
+                self.update_ticker(ticker)
+            except Exception as e:
+                yield EvtStatus(f"Error updating {ticker.tickersymbol}: {e}")
+                logger.exception(f"Error updating {ticker.tickersymbol}: {e}")
+                continue
+
+            yield EvtProgress(f"Finished {ticker.tickersymbol}", i, total)
+
+        yield EvtStatus("All tickers updated", waittime=1)
+
+    def handle(self, cmd):
+        """
+        Handles events returned from uicontroller
+        """
+        if isinstance(cmd, CmdQuit):
+            yield EvtStatus("Quitting ..", waittime=1)
+            self._running = False
+            return
+
+        if isinstance(cmd, CmdUpdateAll):
+            yield from self._handle_update_all()
+            return
+
+        if isinstance(cmd, CmdNotAnOption):
+            yield EvtStatus("Not an option...", waittime=1)
+            return
+
+        yield EvtStatus(f"Unknown command: {cmd!r}")
+
+    def run(self, stdscr: "curses._CursesWindow") -> None:
         """
         Starting up the UIController, takes in the stdscr from curses
         """
         logger.info("Running ..")
-        cont = True
-        while cont:
-            cmd = self._ui.run()
-            match cmd:
-                case CmdUpdateAll():
-                    self.update_all()
-                case CmdQuit():
-                    cont = False
+        self._running = True
+        ui = UIController(stdscr)
+
+        ui.handle_event(EvtStartUp())
+        while self._running:
+            cmd: Command = ui.get_command()
+
+            for evt in self.handle(cmd):
+                ui.handle_event(evt)
+
         self.close()
         return None
 

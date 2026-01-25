@@ -5,11 +5,18 @@ import logging
 import time
 
 from trilobite.tui.renderer import Renderer
-from trilobite.tui.uicommands import (
-        CmdQuit, 
-        CmdUpdateAll,
-        Command,
-    )
+from trilobite.commands.uicommands import (
+    CmdNotAnOption,
+    CmdQuit, 
+    CmdUpdateAll,
+    Command,
+)
+from trilobite.events.uievents import (
+    EvtStartUp,
+    EvtStatus,
+    EvtProgress,
+    Event,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -66,61 +73,62 @@ class UIController:
         self.status_frame.noutrefresh()
         curses.doupdate()
 
-        return None
-
-    def run(self) -> Command:
+    def startup(self) -> None:
         """
         Main starting point for the whole thing
         """
-        self.title_w.erase()
-        self.main_w.erase()
-        self.status_w.erase()
+        self.set_title()
+        self.set_main()
+        self.set_statusbar()
 
+    def set_title(self) -> None:
+        """
+        Setups the title bar
+        """
+        self.title_w.erase()
         attr = curses.color_pair(1) | curses.A_UNDERLINE | curses.A_BOLD
         self.title_w.message_centered(self.title_text, attr = attr)
+
+    def set_main(self) -> None:
+        """
+        Setups the main
+        """
+        self.main_w.erase()
         self.main_w.message_centered("Awaiting command..")
+
+    def set_statusbar(self) -> None:
+        """
+        Setups the status bar
+        """
+        self.status_w.erase()
         self.status_w.message_centered("u: update | q: quit")
-        return self.check_main_menu_ans()
 
-    def check_main_menu_ans(self) -> Command:
+    def get_command(self) -> Command:
         """
-        Might change this logic. Just get the key, then pass that key to
-        some other function later
+        Asks the user for input
         """
-        logger.info("Running..")
-        valid_answers = ["u", "q"]
-        while True:
-            #ans comes in as a string
-            ans = self.main_w.getkey(0,0)
-            try:
-                if ans not in valid_answers:
-                    self.main_w.message_centered("Not an option..")
-                    time.sleep(1)
-                if ans == "u":
-                    self.main_w.message_centered("Updating all ..")
-                    return CmdUpdateAll()
-                if ans == "q":
-                    self.main_w.message_centered("Exiting ..")
-                    time.sleep(750/1000)
-                    return CmdQuit()
-            except ValueError:
-                self.main_w.message_centered("Not a string..")
-                return CmdQuit()
+        self.set_main()
+        self.set_statusbar()
+        cmd = CmdNotAnOption()
+        ans = self.main_w.getkey(0,0)
+        match ans:
+            case "u":
+                cmd = CmdUpdateAll()
+            case "q":
+                cmd =  CmdQuit()
+        return cmd
 
-    def check_if_key_is_enter(self, key: int) -> bool:
+    def handle_event(self, evt: Event) -> None:
         """
-        Takes a variable called key, that represents a keypress from getch().
-        Check if this key is equal to several different types of values for 
-        ENTER. If it is return True, if not return False.
+        Takes in events then handles them
         """
-        return key in ["\n", 10, curses.KEY_ENTER]
-
-    def check_if_key_is_backspace(self, key: int) -> bool:
-        """
-        Takes a variable key, that represents a keypress from getch(). Check
-        if the key is equal to several different types of values for BACKSPACE.
-        If it is return True, if not return False.
-        """
-        return key in ["ć", 263, curses.KEY_BACKSPACE, "KEY_BACKSPACE"]
-
+        match evt:
+            case EvtStartUp():
+                self.startup()
+            case EvtStatus():
+                self.status_w.message_centered(f"{evt.text}", y = 0)
+                time.sleep(evt.waittime)
+            case EvtProgress():
+                self.status_w.message_centered(f"{evt.label} {evt.current}/{evt.total}",y = 1, erase=False)
+                time.sleep(evt.waittime)
 

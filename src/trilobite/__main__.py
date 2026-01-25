@@ -30,8 +30,8 @@ def _curses_main(stdscr: "curses._CursesWindow") -> None:
     stdscr.refresh()
 
     cfg = load_config()
-    app = App(cfg, stdscr)
-    app.run()
+    app = App(cfg)
+    app.run(stdscr)
 
 
 def main() -> NoReturn:
