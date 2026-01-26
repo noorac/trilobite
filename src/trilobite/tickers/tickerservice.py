@@ -143,7 +143,8 @@ class TickerService:
         self._ticker_list = self._tickerclient.get_todays_tickers()
         
         #Temp used for testing during dev
-        tmplist =  ["AAPL", "GOOGL", "DIS", "NVDA", "CAT", "META", "TSLA"] + self._ticker_list[100:200]
+        tmplist =  ["AAPL", "GOOGL", "DIS", "NVDA", "CAT", "META", "TSLA"]# + self._ticker_list[100:200]
+        tmplist = self._ticker_list[180:300]
         self._ticker_list = tmplist
 
         deactivated = self._reconsile_instruments(self._ticker_list)

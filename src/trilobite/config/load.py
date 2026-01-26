@@ -6,12 +6,19 @@ from pathlib import Path
 from typing import Final
 from trilobite.config.models import (
     AppConfig,
+    CFGMisc,
     CFGTickerService,
     CFGDataBase,
 )
 from trilobite.utils.paths import config_dir
 
 logger = logging.getLogger(__name__)
+
+#When adding new, remember to update:
+#DEFAULTS
+#CONFIG_TEMPLATE
+#Add to a model
+#Add model if not alreadyd one
 
 CONFIG_FILENAME: Final[str] = "trilobite.conf"
 
@@ -22,6 +29,7 @@ DEFAULTS: Final[dict[str, str]] = {
     "host": "/run/postgresql",
     "user": "none",
     "port": "5432",
+    "stagger_requests": "True",
 }
 
 CONFIG_TEMPLATE: Final[str] = """\
@@ -40,6 +48,11 @@ dbname = trilobite
 host = /run/postgresql
 user = None
 port = 5432
+
+# --- Misc Settings ---
+# The app will wait a small amount of time(1-2 seconds) between each request
+# to avoid spamming the target with requests
+stagger_requests = True
 """
 
 def _strip_inline_comment(line: str) -> str:
@@ -105,6 +118,14 @@ def _get_optional_str(cfg: dict[str, str], key: str) -> str | None:
         return None
     return raw
 
+def _get_bool(cfg: dict[str, str], key: str) -> bool:
+    raw = cfg.get(key, DEFAULTS[key]).strip()
+    try:
+        return eval(raw)
+    except NameError:
+        logger.warning(f"Invalid bool for {key} = {raw}, defaulting to {DEFAULTS[key]}")
+        return eval(DEFAULTS[key])
+
 def load_config() -> AppConfig:
     """
     Takes in a dict of strings(check on this later) that is then distributed
@@ -132,7 +153,12 @@ def load_config() -> AppConfig:
         port=_get_int(cfg, "port"),
     )
 
+    misc_cfg = CFGMisc(
+        stagger_requests=_get_bool(cfg, "stagger_requests"),
+    )
+
     return AppConfig(
         ticker=ticker_cfg,
         db=db_cfg,
+        misc=misc_cfg,
     )

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from dataclasses import replace
 
 from pandas import DataFrame
@@ -21,6 +22,7 @@ from trilobite.events.uievents import (
     EvtProgress,
     Event, 
 )
+from trilobite.utils.utils import stagger_requests
 
 logger = logging.getLogger(__name__)
 
@@ -60,11 +62,11 @@ class Handler:
             return
 
         yield EvtStatus("Starting update of all tickers", waittime=1)
-        yield EvtProgress("Preparing", 0, total)
 
         for i, ticker, in enumerate(tickers, start=1):
-            yield EvtStatus(ticker.tickersymbol)
-            yield EvtProgress(f"Downloading: ", i-1, total)
+            if self._cfg.misc.stagger_requests:
+                time.sleep(stagger_requests())
+            yield EvtProgress(f"{ticker.tickersymbol}", i, total)
 
             try:
                 self.update_ticker(ticker)
@@ -72,8 +74,6 @@ class Handler:
                 yield EvtStatus(f"Error updating {ticker.tickersymbol}: {e}")
                 logger.exception(f"Error updating {ticker.tickersymbol}: {e}")
                 continue
-
-            yield EvtProgress(f"Finished {ticker.tickersymbol}", i, total)
 
         yield EvtStatus("All tickers updated", waittime=1)
 

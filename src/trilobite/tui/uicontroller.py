@@ -4,6 +4,8 @@ import curses
 import logging
 import time
 
+from tqdm import tqdm
+
 from trilobite.tui.renderer import Renderer
 from trilobite.commands.uicommands import (
     CmdNotAnOption,
