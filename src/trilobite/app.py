@@ -6,6 +6,7 @@ from datetime import date, timedelta
 from pandas import DataFrame
 import logging
 
+from trilobite.cli.clicontroller import CLIController
 from trilobite.config.models import AppConfig, CFGTickerService, CFGDataBase
 from trilobite.db.connect import DbSettings, connect
 from trilobite.db.repo import MarketRepo
@@ -85,7 +86,7 @@ class App:
         ui.handle_event(EvtStartUp())
         self._run_loop(ui)
 
-    def run_cli(self, argv: list[str]) -> None:
+    def run_headless(self, argv: list[str]) -> None:
         """
         Running headless version, takes in the argv list from terminal
         """

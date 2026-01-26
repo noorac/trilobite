@@ -9,9 +9,17 @@ from trilobite.app import App
 from trilobite.config.load import load_config
 from trilobite.logging.setup import setup_logging
 
+def _headless_main(argv: list[str]) -> None:
+    """
+    Starts the application in headless mode
+    """
+    cfg = load_config()
+    app = App(cfg)
+    app.run_headless(argv)
+
 def _curses_main(stdscr: "curses._CursesWindow") -> None:
     """
-    Runs inside curses.wrapper() and starts the actual application
+    Runs inside curses.wrapper() and starts the application in curses mode
     """
     try:
         curses.curs_set(0)
@@ -38,13 +46,13 @@ def main() -> NoReturn:
     """
     Entrypoint:
     - Starts logging
-    - Starts curses
+    - Starts headless/curses
     - Handles fatal errors
     """
     argv = sys.argv[1:]
+    #Debug
     debug = "--debug" in argv
     level = logging.DEBUG if debug else logging.INFO
-
     #minimal fallback logging to stderr if unable to start setup_logging()
     logging.basicConfig(
             level=logging.INFO,
@@ -52,9 +60,15 @@ def main() -> NoReturn:
     )
     logger = logging.getLogger("trilobite")
 
+    #Curses
+    run_curses = "--curses" in argv
+
     try:
         setup_logging(level=level)
-        curses.wrapper(_curses_main)
+        if run_curses:
+            curses.wrapper(_curses_main)
+        else:
+            _headless_main(argv)
     except KeyboardInterrupt:
         logger.info("Interrupted by user")
         sys.exit(130)
