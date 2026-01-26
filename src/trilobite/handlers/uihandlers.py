@@ -62,7 +62,7 @@ class Handler:
             return
 
         yield EvtStatus("Starting update of all tickers", waittime=1)
-
+        error_tickers = []
         for i, ticker, in enumerate(tickers, start=1):
             if self._cfg.misc.stagger_requests:
                 time.sleep(stagger_requests())
@@ -71,11 +71,15 @@ class Handler:
             try:
                 self.update_ticker(ticker)
             except Exception as e:
-                yield EvtStatus(f"Error updating {ticker.tickersymbol}: {e}")
+                #yield EvtStatus(f"Error updating {ticker.tickersymbol}: {e}")
                 logger.exception(f"Error updating {ticker.tickersymbol}: {e}")
+                error_tickers.append(ticker.tickersymbol)
                 continue
 
-        yield EvtStatus("All tickers updated", waittime=1)
+        if len(error_tickers) > 0:
+            yield EvtStatus("Following tickers failed to update: {error_tickers}", waittime=5)
+        else:
+            yield EvtStatus("All tickers updated", waittime=1)
 
     def update_ticker(self, ticker: Ticker) -> None:
         """
