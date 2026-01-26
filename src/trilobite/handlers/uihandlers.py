@@ -6,6 +6,7 @@ from dataclasses import replace
 
 from pandas import DataFrame
 
+from trilobite.cli.runtimeflags import RuntimeFlags
 from trilobite.state.state import AppState
 from trilobite.config.models import AppConfig
 from trilobite.tickers.tickerservice import Ticker
@@ -27,9 +28,10 @@ from trilobite.utils.utils import stagger_requests
 logger = logging.getLogger(__name__)
 
 class Handler:
-    def __init__(self, state: AppState, cfg: AppConfig):
+    def __init__(self, state: AppState, cfg: AppConfig, flags: RuntimeFlags):
         self._state = state
         self._cfg = cfg
+        self._flags = flags
 
     def handle(self, cmd):
         """

@@ -5,6 +5,7 @@ import time
 
 from tqdm import tqdm
 
+from trilobite.cli.runtimeflags import CLIFlags, RuntimeFlags
 from trilobite.commands.uicommands import (
     CmdNotAnOption, 
     CmdQuit, 
@@ -20,16 +21,17 @@ from trilobite.events.uievents import (
 )
 
 class CLIController:
-    def __init__(self, argv: list[str]) -> None:
-        self._argv = argv
+    def __init__(self, flags: CLIFlags) -> None:
+        self._flags = flags
         self._bar = None
 
     def get_command(self) -> Command:
         """
         Decides which command to send to Handler
         """
-        if "--updateall" in self._argv:
-            self._argv = [e for e in self._argv if e != "--updateall"]
+        if self._flags.updateall:
+            #self._argv = [e for e in self._argv if e != "--updateall"]
+            self._flags.updateall = False
             return CmdUpdateAll()
         else:
             return CmdQuit()

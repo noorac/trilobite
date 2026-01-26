@@ -1,1 +1,1 @@
-# __init__.py for tui
+# __init__.py for ui

@@ -6,7 +6,8 @@ from datetime import date, timedelta
 from pandas import DataFrame
 import logging
 
-from trilobite.cli.clicontroller import CLIController
+from trilobite.cli.runtimeflags import CLIFlags, RuntimeFlags
+from trilobite.ui.cli.clicontroller import CLIController
 from trilobite.config.models import AppConfig, CFGTickerService, CFGDataBase
 from trilobite.db.connect import DbSettings, connect
 from trilobite.db.repo import MarketRepo
@@ -17,7 +18,7 @@ from trilobite.marketdata.marketservice import MarketService
 from trilobite.state.state import AppState
 from trilobite.tickers.tickerclient import TickerClient
 from trilobite.tickers.tickerservice import Ticker, TickerService
-from trilobite.tui.uicontroller import UIController
+from trilobite.ui.curses.uicontroller import UIController
 from trilobite.commands.uicommands import (
     CmdNotAnOption, 
     CmdQuit, 
@@ -38,8 +39,9 @@ class App:
     """
     The main app! This object will run most of the program
     """
-    def __init__(self, cfg: AppConfig) -> None:
+    def __init__(self, cfg: AppConfig, flags: RuntimeFlags) -> None:
         logger.info("Running ..")
+        self._flags = flags
 
         self._cfg = cfg
 
@@ -59,13 +61,13 @@ class App:
 
         # Ticker wiring
         tickerclient = TickerClient()
-        ticker = TickerService(repo=repo, tickerclient=tickerclient, cfg=cfg.ticker)
+        ticker = TickerService(repo=repo, tickerclient=tickerclient, cfg=cfg.ticker, flags=self._flags)
 
         #Create AppState
         self._state = AppState(repo=repo, market=market, ticker=ticker)
 
         #Handler wiring
-        self._handler = Handler(self._state, self._cfg)
+        self._handler = Handler(self._state, self._cfg, self._flags)
         return None
 
     def close(self) -> None:
@@ -86,11 +88,11 @@ class App:
         ui.handle_event(EvtStartUp())
         self._run_loop(ui)
 
-    def run_headless(self, argv: list[str]) -> None:
+    def run_headless(self, flags: CLIFlags) -> None:
         """
         Running headless version, takes in the argv list from terminal
         """
-        ui = CLIController(argv)
+        ui = CLIController(flags=flags)
         self._run_loop(ui)
 
     def _run_loop(self, ui) -> None:

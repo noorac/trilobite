@@ -6,18 +6,20 @@ import sys
 from typing import NoReturn
 
 from trilobite.app import App
+from trilobite.cli.cli import parse_args
+from trilobite.cli.runtimeflags import CLIFlags, RuntimeFlags
 from trilobite.config.load import load_config
 from trilobite.logging.setup import setup_logging
 
-def _headless_main(argv: list[str]) -> None:
+def _headless_main(cliflags: CLIFlags, runtimeflags: RuntimeFlags) -> None:
     """
     Starts the application in headless mode
     """
-    cfg = load_config()
-    app = App(cfg)
-    app.run_headless(argv)
+    cfg = load_config(runtimeflags)
+    app = App(cfg, runtimeflags)
+    app.run_headless(cliflags)
 
-def _curses_main(stdscr: "curses._CursesWindow") -> None:
+def _curses_main(stdscr: "curses._CursesWindow", runtimeflags: RuntimeFlags) -> None:
     """
     Runs inside curses.wrapper() and starts the application in curses mode
     """
@@ -37,8 +39,8 @@ def _curses_main(stdscr: "curses._CursesWindow") -> None:
     stdscr.clear()
     stdscr.refresh()
 
-    cfg = load_config()
-    app = App(cfg)
+    cfg = load_config(runtimeflags)
+    app = App(cfg, runtimeflags)
     app.run_curses(stdscr)
 
 
@@ -49,10 +51,8 @@ def main() -> NoReturn:
     - Starts headless/curses
     - Handles fatal errors
     """
-    argv = sys.argv[1:]
-    #Debug
-    debug = "--debug" in argv
-    level = logging.DEBUG if debug else logging.INFO
+    runtimeflags,cliflags, ns = parse_args(sys.argv[1:])
+    level = logging.DEBUG if runtimeflags.debug else logging.INFO
     #minimal fallback logging to stderr if unable to start setup_logging()
     logging.basicConfig(
             level=logging.INFO,
@@ -60,15 +60,12 @@ def main() -> NoReturn:
     )
     logger = logging.getLogger("trilobite")
 
-    #Curses
-    run_curses = "--curses" in argv
-
     try:
         setup_logging(level=level)
-        if run_curses:
-            curses.wrapper(_curses_main)
+        if runtimeflags.curses:
+            curses.wrapper(_curses_main,runtimeflags)
         else:
-            _headless_main(argv)
+            _headless_main(cliflags,runtimeflags)
     except KeyboardInterrupt:
         logger.info("Interrupted by user")
         sys.exit(130)

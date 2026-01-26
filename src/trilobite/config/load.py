@@ -4,6 +4,7 @@ from datetime import date
 import logging
 from pathlib import Path
 from typing import Final
+from trilobite.cli.runtimeflags import RuntimeFlags
 from trilobite.config.models import (
     AppConfig,
     CFGMisc,
@@ -126,7 +127,7 @@ def _get_bool(cfg: dict[str, str], key: str) -> bool:
         logger.warning(f"Invalid bool for {key} = {raw}, defaulting to {DEFAULTS[key]}")
         return eval(DEFAULTS[key])
 
-def load_config() -> AppConfig:
+def load_config(flags: RuntimeFlags) -> AppConfig:
     """
     Takes in a dict of strings(check on this later) that is then distributed
     among different config modules, they are stored in a common module AppConfig

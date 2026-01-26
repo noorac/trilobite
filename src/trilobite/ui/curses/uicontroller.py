@@ -6,7 +6,7 @@ import time
 
 from tqdm import tqdm
 
-from trilobite.tui.renderer import Renderer
+from trilobite.ui.curses.renderer import Renderer
 from trilobite.commands.uicommands import (
     CmdNotAnOption,
     CmdQuit, 

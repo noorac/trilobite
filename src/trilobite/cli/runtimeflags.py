@@ -6,4 +6,9 @@ from os import wait
 class RuntimeFlags:
     dev: bool = False
     debug: bool = False
-    dry_run: bool = False:wait
+    dry_run: bool = False
+    curses: bool = False
+
+@dataclass
+class CLIFlags:
+    updateall: bool = False
