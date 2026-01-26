@@ -17,4 +17,5 @@ class EvtProgress(Event):
 @dataclass(frozen=True)
 class EvtStartUp(Event): ...
 
-
+@dataclass(frozen=True)
+class EvtExit(Event): ...
