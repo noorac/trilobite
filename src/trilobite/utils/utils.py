@@ -1,7 +1,7 @@
 #Helper functions
 import random
 
-def stagger_requests(mintime: float = 0.5, maxtime: float = 1.5) -> float:
+def stagger_requests(mintime: float = 0.2, maxtime: float = 0.9) -> float:
     """
     Creats a float in the range between the two numbers. 
     """

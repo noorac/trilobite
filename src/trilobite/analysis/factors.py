@@ -61,7 +61,9 @@ class PCAReturnFactors:
 
     @property
     def n_factors(self) -> int:
-        return self.spec.n_factors
+        if self._components is None:
+            return self.spec.n_factors
+        return int(self._components.shape[0])
 
     def fit(self, returns_wide: DataFrame) -> "PCAReturnFactors":
         _assert_returns_matrix(returns_wide)

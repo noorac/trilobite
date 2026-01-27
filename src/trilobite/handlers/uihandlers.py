@@ -6,17 +6,22 @@ from dataclasses import replace
 
 from pandas import DataFrame
 
+from trilobite.analysis.datasource import MarketDataSource
+from trilobite.analysis.features import prices_to_log_returns
+from trilobite.analysis.trainers.nn_direction import NNDirectionsConfig, NNDirectionsTrainer
 from trilobite.cli.runtimeflags import RuntimeFlags
 from trilobite.state.state import AppState
 from trilobite.config.models import AppConfig
 from trilobite.tickers.tickerservice import Ticker
 from trilobite.commands.uicommands import (
+    CmdTrainNN,
     CmdNotAnOption, 
     CmdQuit, 
     CmdUpdateAll,
     Command, 
 )
 from trilobite.events.uievents import (
+    EvtPredictionRanked,
     EvtExit,
     EvtStartUp,
     EvtStatus, 
@@ -50,6 +55,9 @@ class Handler:
             yield EvtStatus("Not an option...", waittime=1)
             return
 
+        if isinstance(cmd, CmdTrainNN):
+            yield from self._handle_train_nn(cmd)
+
         yield EvtStatus(f"Unknown command: {cmd!r}")
 
     def _handle_update_all(self):
@@ -79,9 +87,43 @@ class Handler:
                 continue
 
         if len(error_tickers) > 0:
-            yield EvtStatus("Following tickers failed to update: {error_tickers}", waittime=5)
+            yield EvtStatus(f"Following tickers failed to update: {error_tickers}", waittime=5)
         else:
             yield EvtStatus("All tickers updated", waittime=1)
+
+    def _handle_train_nn(self, cmd: CmdTrainNN):
+        yield EvtStatus("Loading data for NN training...", waittime=0)
+
+        ds = MarketDataSource(self._state.repo)
+
+        yield EvtStatus(f"Building adjclose matrix (min_days={self._cfg.analysis.min_days})...", waittime=0)
+        adj = ds.load_adjclose_matrix(min_days=self._cfg.analysis.min_days)
+
+        yield EvtStatus("Computing log returns...", waittime=0)
+        rets = prices_to_log_returns(adj)
+
+        yield EvtStatus("Training NN (PCA factors + GRU)...", waittime=0)
+
+        cfg = NNDirectionsConfig(
+            n_factors=self._cfg.analysis.topn, #was n_factors
+            lookback=self._cfg.analysis.lookback,
+            horizon=self._cfg.analysis.horizon,
+            epochs=self._cfg.analysis.epochs,
+            device="cpu",
+        )
+        trainer = NNDirectionsTrainer(cfg)
+        logger.info(f"adj shape: {adj.shape}, rets shape: {rets.shape}")
+        trainer.fit(rets)
+
+        yield EvtStatus("Predicting latest...", waittime=0)
+        pred = trainer.predict_latest(rets)
+
+        ranked = pred.ranked(cmd.top_n)
+        yield EvtPredictionRanked(date=pred.date, ranked=ranked)
+
+        yield EvtStatus("Done.", waittime=1)
+
+
 
     def update_ticker(self, ticker: Ticker) -> None:
         """

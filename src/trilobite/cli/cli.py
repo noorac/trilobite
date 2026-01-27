@@ -16,6 +16,13 @@ def parse_args(argv: list[str]) -> tuple[RuntimeFlags,CLIFlags, argparse.Namespa
     p.add_argument("--curses", action="store_true", help="Uses curses for UI")
     p.add_argument("--updateall", action="store_true", help="Uses curses for UI")
     p.add_argument("--consolelog", action="store_true", help="Logging will output to the console")
+    p.add_argument("--train-nn", action="store_true", help="Train NN and print ranked predictioN")
+    p.add_argument("--topn", type=int, default=20, help="Top N tickers to display")
+    p.add_argument("--min-days", type=int, default=252*5, help="Minimum trading days required in DB")
+    p.add_argument("--lookback", type=int, default=60, help="Lookback window (days)")
+    p.add_argument("--horizon", type=int, default=1, help="Prediction horizon (days)")
+    p.add_argument("--epochs", type=int, default=10, help="Training epochs")
+
 
     ns = p.parse_args(argv)
 
@@ -28,6 +35,12 @@ def parse_args(argv: list[str]) -> tuple[RuntimeFlags,CLIFlags, argparse.Namespa
     )
     cliflags = CLIFlags(
         updateall=ns.updateall,
+        train_nn=ns.train_nn,
+        topn=ns.topn,
+        min_days=ns.min_days,
+        lookback=ns.lookback,
+        horizon=ns.horizon,
+        epochs=ns.epochs,
     )
     return runtimeflags,cliflags, ns
 

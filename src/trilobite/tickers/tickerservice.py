@@ -147,7 +147,7 @@ class TickerService:
         if self._flags.dev:
             self._ticker_list = ["AAPL", "GOOGL", "DIS", "NVDA", "CAT", "META", "TSLA"]
         else:
-            self._ticker_list = self._ticker_list[:200]
+            self._ticker_list = self._ticker_list[:400]
         
         deactivated = self._reconsile_instruments(self._ticker_list)
         logger.info(f"The following tickers were deactivated: {deactivated}")

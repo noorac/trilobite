@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import pandas as pd
 
 class Event: ...
 
@@ -19,3 +20,8 @@ class EvtStartUp(Event): ...
 
 @dataclass(frozen=True)
 class EvtExit(Event): ...
+
+@dataclass(frozen=True)
+class EvtPredictionRanked(Event):
+    date: pd.Timestamp
+    ranked: pd.Series

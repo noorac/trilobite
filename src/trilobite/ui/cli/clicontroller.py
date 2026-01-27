@@ -9,12 +9,14 @@ from trilobite.cli.runtimeflags import RuntimeFlags
 from trilobite.cli.cliflags import CLIFlags
 from trilobite.commands.uicommands import (
     CmdNotAnOption, 
-    CmdQuit, 
+    CmdQuit,
+    CmdTrainNN, 
     CmdUpdateAll,
     Command, 
 )
 from trilobite.events.uievents import (
     EvtExit,
+    EvtPredictionRanked,
     EvtStartUp,
     EvtStatus, 
     EvtProgress,
@@ -34,6 +36,9 @@ class CLIController:
             #self._argv = [e for e in self._argv if e != "--updateall"]
             self._flags.updateall = False
             return CmdUpdateAll()
+        if self._flags.train_nn:
+            self._flags.train_nn = False
+            return CmdTrainNN()
         else:
             return CmdQuit()
 
@@ -58,4 +63,7 @@ class CLIController:
                     self._bar.close()
                     self._bar = None
                 time.sleep(evt.waittime)
+            case EvtPredictionRanked():
+                print(f"{evt.date}: {evt.ranked}")
+                
 

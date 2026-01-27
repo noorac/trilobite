@@ -239,7 +239,8 @@ class MarketRepo:
                 (end_date_db,) = cur.fetchone()
             end_date = end_date_db
 
-        start_date = end_date - timedelta(days=min_days-1)
+        start_date = end_date - timedelta(days=int(min_days*2))
+        #start_date = end_date - timedelta(days=min_days-1)
 
         sql = """
         SELECT i.ticker
