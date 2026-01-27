@@ -19,7 +19,12 @@ class CFGDataBase:
     port: int
 
 @dataclass(frozen=True)
+class CFGMisc:
+    stagger_requests: bool
+
+@dataclass(frozen=True)
 class AppConfig:
     ticker: CFGTickerService
     db: CFGDataBase
+    misc: CFGMisc
 

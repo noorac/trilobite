@@ -5,6 +5,7 @@ from typing import Protocol
 from datetime import date, timedelta
 import logging
 
+from trilobite.cli.runtimeflags import RuntimeFlags
 from trilobite.config.models import CFGTickerService
 from trilobite.tickers.tickerclient import TickerClient
 
@@ -41,10 +42,11 @@ class TickerService:
     """
     Keeps track of currently active tickers on the market
     """
-    def __init__(self, repo: TickerRepo, tickerclient: TickerClient, cfg: CFGTickerService) -> None:
+    def __init__(self, repo: TickerRepo, tickerclient: TickerClient, cfg: CFGTickerService, flags: RuntimeFlags) -> None:
         self._repo = repo
         self._tickerclient = tickerclient
         self._cfg = cfg
+        self._flags = flags
 
         self._ticker_list: list[str] = []
         self._ticker_dict: dict[str, date | None] = {}
@@ -141,11 +143,12 @@ class TickerService:
         - dict{key:ticker, value:date_of_last_entry}
         """
         self._ticker_list = self._tickerclient.get_todays_tickers()
-        
-        #Temp used for testing during dev
-        tmplist =  ["AAPL", "GOOGL", "DIS", "NVDA", "CAT", "META", "TSLA"] + self._ticker_list[:12]
-        self._ticker_list = tmplist
 
+        if self._flags.dev:
+            self._ticker_list = ["AAPL", "GOOGL", "DIS", "NVDA", "CAT", "META", "TSLA"]
+        else:
+            self._ticker_list = self._ticker_list[:200]
+        
         deactivated = self._reconsile_instruments(self._ticker_list)
         logger.info(f"The following tickers were deactivated: {deactivated}")
 
