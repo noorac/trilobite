@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable, Mapping, Sequence
 
 import pandas as pd
 import psycopg
@@ -216,4 +216,60 @@ class MarketRepo:
         self.conn.commit()
         return 0 if affected is None or affected < 0 else int(affected)
 
+
+    def list_tickers_with_min_ohlcv_days(self,
+                                         min_days: int,
+                                         *,
+                                         end_date: date | None = None,
+                                         ) -> list[str]:
+        """
+        Returns all tickers that have at least min_days OHLCV rows in the 
+        inclusive data range. where start_date = end_date - min_days-1
+
+        Note:
+        - This counts only trading day rows, not calendar days
+        - end date defaults to CURRENT_DATE in sql
+        """
+        if min_days <= 0:
+            raise ValueError("min_days must be > 0")
+
+        if end_date is None:
+            with self.conn.cursor(row_factory=tuple_row) as cur:
+                cur.execute("SELECT CURRENT_DATE;")
+                (end_date_db,) = cur.fetchone()
+            end_date = end_date_db
+
+        start_date = end_date - timedelta(days=min_days-1)
+
+        sql = """
+        SELECT i.ticker
+        FROM instrument AS i
+        JOIN ohlcv_daily AS o
+        ON o.instrument_id = i.id
+        WHERE o.date BETWEEN %s AND %s
+        GROUP BY i.ticker
+        HAVING COUNT(*) >= %s
+        ORDER BY i.ticker;
+        """
+
+        with self.conn.cursor(row_factory=tuple_row) as cur:
+            cur.execute(sql, (start_date, end_date, min_days))
+            rows: list[tuple[str]] = cur.fetchall()
+
+        return [t for (t,) in rows]
+
+
+    def fetch_adjclose_long(self,
+                            tickers: Sequence[str],
+                            *,
+                            start_date: date,
+                            end_date: date,
+                            ) -> DataFrame:
+        """
+        Fetch adjclose as a long dataframe withc olums:
+        - ticker (str), date(datetime64 or date) adjclose(float)
+        """
+        cleaned = sorted({t.strip().upper() for t in tickers if t and t.strip()})
+        if not cleaned:
+            return pd.DataFrame(columns=["ticker", "date", "adjclose"])
 
