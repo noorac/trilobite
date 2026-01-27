@@ -32,7 +32,8 @@ DEFAULTS: Final[dict[str, str]] = {
     "user": "none",
     "port": "5432",
     "stagger_requests": "True",
-    "topn": "20",
+    "top_n": "20",
+    "n_factors": "20",
     "min_days": "1260",
     "lookback": "60",
     "horizon": "1",
@@ -62,7 +63,8 @@ port = 5432
 stagger_requests = True
 
 # --- Analysis Settings ---
-topn = 20
+top_n = 20
+n_factors = 20
 min_days = 1260
 lookback = 60
 horizon = 1
@@ -172,7 +174,8 @@ def load_config(flags: RuntimeFlags) -> AppConfig:
     )
 
     analysis_cfg = CFGAnalysis(
-        topn=_get_int(cfg, "topn"),
+        top_n=_get_int(cfg, "top_n"),
+        n_factors=_get_int(cfg, "n_factors"),
         min_days=_get_int(cfg, "min_days"),
         lookback=_get_int(cfg, "lookback"),
         horizon=_get_int(cfg, "horizon"),

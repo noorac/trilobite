@@ -24,7 +24,8 @@ class CFGMisc:
 
 @dataclass(frozen=True)
 class CFGAnalysis:
-    topn: int = 20
+    top_n: int = 20
+    n_factors: int = 20
     min_days: int = 252 * 5
     lookback: int = 60
     horizon: int = 1

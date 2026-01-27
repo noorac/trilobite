@@ -58,7 +58,8 @@ class Handler:
         if isinstance(cmd, CmdTrainNN):
             yield from self._handle_train_nn(cmd)
 
-        yield EvtStatus(f"Unknown command: {cmd!r}")
+        else:
+            yield EvtStatus(f"Unknown command: {cmd!r}")
 
     def _handle_update_all(self):
         """
@@ -105,14 +106,14 @@ class Handler:
         yield EvtStatus("Training NN (PCA factors + GRU)...", waittime=0)
 
         cfg = NNDirectionsConfig(
-            n_factors=self._cfg.analysis.topn, #was n_factors
+            n_factors=self._cfg.analysis.n_factors,
             lookback=self._cfg.analysis.lookback,
             horizon=self._cfg.analysis.horizon,
             epochs=self._cfg.analysis.epochs,
             device="cpu",
         )
         trainer = NNDirectionsTrainer(cfg)
-        logger.info(f"adj shape: {adj.shape}, rets shape: {rets.shape}")
+        logger.info(f"adj.shape={adj.shape}, rets.shape={rets.shape}")
         trainer.fit(rets)
 
         yield EvtStatus("Predicting latest...", waittime=0)

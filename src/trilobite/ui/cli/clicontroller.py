@@ -38,7 +38,7 @@ class CLIController:
             return CmdUpdateAll()
         if self._flags.train_nn:
             self._flags.train_nn = False
-            return CmdTrainNN()
+            return CmdTrainNN(self._flags.topn)
         else:
             return CmdQuit()
 
@@ -64,6 +64,6 @@ class CLIController:
                     self._bar = None
                 time.sleep(evt.waittime)
             case EvtPredictionRanked():
-                print(f"{evt.date}: {evt.ranked}")
+                print(f"{evt.date}:\n{evt.ranked}")
                 
 
