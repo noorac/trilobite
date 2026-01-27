@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import argparse
-from trilobite.cli.runtimeflags import CLIFlags, RuntimeFlags
+from trilobite.cli.runtimeflags import RuntimeFlags
+from trilobite.cli.cliflags import CLIFlags
 
 def parse_args(argv: list[str]) -> tuple[RuntimeFlags,CLIFlags, argparse.Namespace]:
     """
@@ -14,6 +15,7 @@ def parse_args(argv: list[str]) -> tuple[RuntimeFlags,CLIFlags, argparse.Namespa
     p.add_argument("--dry-run", action="store_true", help="Do not write to DB")
     p.add_argument("--curses", action="store_true", help="Uses curses for UI")
     p.add_argument("--updateall", action="store_true", help="Uses curses for UI")
+    p.add_argument("--consolelog", action="store_true", help="Logging will output to the console")
 
     ns = p.parse_args(argv)
 
@@ -22,6 +24,7 @@ def parse_args(argv: list[str]) -> tuple[RuntimeFlags,CLIFlags, argparse.Namespa
         debug=ns.debug or ns.dev,
         dry_run=ns.dry_run,
         curses=ns.curses,
+        consolelog=ns.consolelog,
     )
     cliflags = CLIFlags(
         updateall=ns.updateall,

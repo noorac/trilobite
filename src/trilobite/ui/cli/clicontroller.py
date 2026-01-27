@@ -5,7 +5,8 @@ import time
 
 from tqdm import tqdm
 
-from trilobite.cli.runtimeflags import CLIFlags, RuntimeFlags
+from trilobite.cli.runtimeflags import RuntimeFlags
+from trilobite.cli.cliflags import CLIFlags
 from trilobite.commands.uicommands import (
     CmdNotAnOption, 
     CmdQuit, 

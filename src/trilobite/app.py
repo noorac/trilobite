@@ -6,7 +6,8 @@ from datetime import date, timedelta
 from pandas import DataFrame
 import logging
 
-from trilobite.cli.runtimeflags import CLIFlags, RuntimeFlags
+from trilobite.cli.runtimeflags import RuntimeFlags
+from trilobite.cli.cliflags import CLIFlags
 from trilobite.ui.cli.clicontroller import CLIController
 from trilobite.config.models import AppConfig, CFGTickerService, CFGDataBase
 from trilobite.db.connect import DbSettings, connect
