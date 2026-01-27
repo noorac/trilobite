@@ -273,3 +273,23 @@ class MarketRepo:
         if not cleaned:
             return pd.DataFrame(columns=["ticker", "date", "adjclose"])
 
+        sql = """
+        SELECT i.ticker, o.date, o.adjclose
+        FROM instrument AS i
+        JOIN ohlcv_daily AS o
+        ON o.instrument_id = i.id
+        WHERE i.ticker = ANY(%s)
+        AND o.date BETWEEN %s AND %s
+        ORDER BY i.ticker, o.date;
+        """
+        with self.conn.cursor(row_factory=tuple_row) as cur:
+            cur.execute(sql, (cleaned, start_date, end_date))
+            rows: list[tuple[str, date, float | None]] = cur.fetchall()
+
+        df = pd.DataFrame(rows, columns = ["ticker", "date", "adjclose"])
+        df["ticker"] = df["ticker"].astype(str)
+        df["date"] = pd.to_datetime(df["date"])
+        df["adjclose"] = pd.to_numeric(df["adjclose"], errors="coerce")
+        return df
+
+
