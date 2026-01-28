@@ -19,7 +19,6 @@ from trilobite.marketdata.marketservice import MarketService
 from trilobite.state.state import AppState
 from trilobite.tickers.tickerclient import TickerClient
 from trilobite.tickers.tickerservice import Ticker, TickerService
-from trilobite.ui.curses.uicontroller import UIController
 from trilobite.commands.uicommands import (
     CmdNotAnOption, 
     CmdQuit, 
@@ -79,15 +78,6 @@ class App:
             self._conn.close()
         except Exception:
             logger.exception("Failed at closing DB connection")
-
-    def run_curses(self, stdscr: "curses._CursesWindow") -> None:
-        """
-        Starting up the UIController, takes in the stdscr from curses
-        """
-        logger.info("Running ..")
-        ui = UIController(stdscr)
-        ui.handle_event(EvtStartUp())
-        self._run_loop(ui)
 
     def run_headless(self, flags: CLIFlags) -> None:
         """

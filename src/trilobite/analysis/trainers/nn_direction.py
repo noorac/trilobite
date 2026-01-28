@@ -135,32 +135,21 @@ class NNDirectionsTrainer:
         #         opt.step()
         model.train()
         for _epoch in range(1, self.cfg.epochs + 1):
-            if not self._runtimeflags.curses:
-                pbar= tqdm(loader, desc=f"Train epoch {_epoch}/{self.cfg.epochs}", leave=False)
-                for x, y in pbar:
-                    # x: (B, lookback, K)
-                    # y: (B, N)
-                    x = x.to(device)
-                    y = y.to(device)
+            #Must remove pbar if using something else than terminal, see above
+            #for clean without progerss updates.
+            pbar= tqdm(loader, desc=f"Train epoch {_epoch}/{self.cfg.epochs}", leave=False)
+            for x, y in pbar:
+                # x: (B, lookback, K)
+                # y: (B, N)
+                x = x.to(device)
+                y = y.to(device)
 
-                    opt.zero_grad(set_to_none=True)
-                    logits = model(x)
-                    loss = loss_fn(logits, y)
-                    loss.backward()
-                    opt.step()
-                    pbar.set_postfix(loss=float(loss.detach().cpu()))
-            else:
-                for x, y in loader:
-                    # x: (B, lookback, K)
-                    # y: (B, N)
-                    x = x.to(device)
-                    y = y.to(device)
-
-                    opt.zero_grad(set_to_none=True)
-                    logits = model(x)
-                    loss = loss_fn(logits, y)
-                    loss.backward()
-                    opt.step()
+                opt.zero_grad(set_to_none=True)
+                logits = model(x)
+                loss = loss_fn(logits, y)
+                loss.backward()
+                opt.step()
+                pbar.set_postfix(loss=float(loss.detach().cpu()))
 
         self._factor_model = fm
         self._model = model
