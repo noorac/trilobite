@@ -10,10 +10,12 @@ import torch
 import torch.nn as nn
 from pandas import DataFrame
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from trilobite.analysis.dataset import FactorDatasetSpec, FactorWindowDirectionDataset
 from trilobite.analysis.factors import FactorSpec, PCAReturnFactors
 from trilobite.analysis.trainers.base import Prediction
+from trilobite.cli.runtimeflags import RuntimeFlags
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +76,8 @@ class NNDirectionsTrainer:
     Output: probabilities per ticker for next-day direction
     """
 
-    def __init__(self, cfg: Optional[NNDirectionsConfig] = None) -> None:
+    def __init__(self, runtimeflags: RuntimeFlags, cfg: Optional[NNDirectionsConfig] = None) -> None:
+        self._runtimeflags = runtimeflags
         self.cfg = cfg or NNDirectionsConfig()
         self._factor_model: PCAReturnFactors | None = None
         self._model: _FactorGRUToUniverse | None = None
@@ -117,19 +120,47 @@ class NNDirectionsTrainer:
         loss_fn = nn.BCEWithLogitsLoss()
 
         # 4) Train
+        # model.train()
+        # for _epoch in range(1, self.cfg.epochs + 1):
+        #     for x, y in loader:
+        #         # x: (B, lookback, K)
+        #         # y: (B, N)
+        #         x = x.to(device)
+        #         y = y.to(device)
+        #
+        #         opt.zero_grad(set_to_none=True)
+        #         logits = model(x)
+        #         loss = loss_fn(logits, y)
+        #         loss.backward()
+        #         opt.step()
         model.train()
         for _epoch in range(1, self.cfg.epochs + 1):
-            for x, y in loader:
-                # x: (B, lookback, K)
-                # y: (B, N)
-                x = x.to(device)
-                y = y.to(device)
+            if not self._runtimeflags.curses:
+                pbar= tqdm(loader, desc=f"Train epoch {_epoch}/{self.cfg.epochs}", leave=False)
+                for x, y in pbar:
+                    # x: (B, lookback, K)
+                    # y: (B, N)
+                    x = x.to(device)
+                    y = y.to(device)
 
-                opt.zero_grad(set_to_none=True)
-                logits = model(x)
-                loss = loss_fn(logits, y)
-                loss.backward()
-                opt.step()
+                    opt.zero_grad(set_to_none=True)
+                    logits = model(x)
+                    loss = loss_fn(logits, y)
+                    loss.backward()
+                    opt.step()
+                    pbar.set_postfix(loss=float(loss.detach().cpu()))
+            else:
+                for x, y in loader:
+                    # x: (B, lookback, K)
+                    # y: (B, N)
+                    x = x.to(device)
+                    y = y.to(device)
+
+                    opt.zero_grad(set_to_none=True)
+                    logits = model(x)
+                    loss = loss_fn(logits, y)
+                    loss.backward()
+                    opt.step()
 
         self._factor_model = fm
         self._model = model

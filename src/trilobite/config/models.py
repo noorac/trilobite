@@ -26,7 +26,7 @@ class CFGMisc:
 class CFGAnalysis:
     top_n: int = 20
     n_factors: int = 20
-    min_days: int = 252 * 5
+    min_days: int = 1260
     lookback: int = 60
     horizon: int = 1
     epochs: int = 10

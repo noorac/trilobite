@@ -112,7 +112,7 @@ class Handler:
             epochs=self._cfg.analysis.epochs,
             device="cpu",
         )
-        trainer = NNDirectionsTrainer(cfg)
+        trainer = NNDirectionsTrainer(self._flags, cfg)
         logger.info(f"adj.shape={adj.shape}, rets.shape={rets.shape}")
         trainer.fit(rets)
 
