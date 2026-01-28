@@ -15,7 +15,6 @@ from tqdm import tqdm
 from trilobite.analysis.dataset import FactorDatasetSpec, FactorWindowDirectionDataset
 from trilobite.analysis.factors import FactorSpec, PCAReturnFactors
 from trilobite.analysis.trainers.base import Prediction
-from trilobite.cli.runtimeflags import RuntimeFlags
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +75,7 @@ class NNDirectionsTrainer:
     Output: probabilities per ticker for next-day direction
     """
 
-    def __init__(self, runtimeflags: RuntimeFlags, cfg: Optional[NNDirectionsConfig] = None) -> None:
-        self._runtimeflags = runtimeflags
+    def __init__(self, cfg: Optional[NNDirectionsConfig] = None) -> None:
         self.cfg = cfg or NNDirectionsConfig()
         self._factor_model: PCAReturnFactors | None = None
         self._model: _FactorGRUToUniverse | None = None

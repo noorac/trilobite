@@ -5,8 +5,7 @@ import time
 
 from tqdm import tqdm
 
-from trilobite.cli.runtimeflags import RuntimeFlags
-from trilobite.cli.cliflags import CLIFlags
+from trilobite.cli.runtimeflags import CliFlags
 from trilobite.commands.uicommands import (
     CmdNotAnOption, 
     CmdQuit,
@@ -14,6 +13,7 @@ from trilobite.commands.uicommands import (
     CmdUpdateAll,
     Command, 
 )
+from trilobite.config.models import CFGAnalysis
 from trilobite.events.uievents import (
     EvtExit,
     EvtPredictionRanked,
@@ -24,8 +24,9 @@ from trilobite.events.uievents import (
 )
 
 class CLIController:
-    def __init__(self, flags: CLIFlags) -> None:
+    def __init__(self, flags: CliFlags, cfg: CFGAnalysis) -> None:
         self._flags = flags
+        self._cfg = cfg
         self._bar = None
 
     def get_command(self) -> Command:
@@ -33,12 +34,11 @@ class CLIController:
         Decides which command to send to Handler
         """
         if self._flags.updateall:
-            #self._argv = [e for e in self._argv if e != "--updateall"]
             self._flags.updateall = False
             return CmdUpdateAll()
         if self._flags.train_nn:
             self._flags.train_nn = False
-            return CmdTrainNN(self._flags.topn)
+            return CmdTrainNN(self._cfg.top_n)
         else:
             return CmdQuit()
 

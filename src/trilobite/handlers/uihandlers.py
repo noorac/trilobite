@@ -9,7 +9,6 @@ from pandas import DataFrame
 from trilobite.analysis.datasource import MarketDataSource
 from trilobite.analysis.features import prices_to_log_returns
 from trilobite.analysis.trainers.nn_direction import NNDirectionsConfig, NNDirectionsTrainer
-from trilobite.cli.runtimeflags import RuntimeFlags
 from trilobite.state.state import AppState
 from trilobite.config.models import AppConfig
 from trilobite.tickers.tickerservice import Ticker
@@ -33,10 +32,9 @@ from trilobite.utils.utils import stagger_requests
 logger = logging.getLogger(__name__)
 
 class Handler:
-    def __init__(self, state: AppState, cfg: AppConfig, flags: RuntimeFlags):
+    def __init__(self, state: AppState, cfg: AppConfig):
         self._state = state
         self._cfg = cfg
-        self._flags = flags
 
     def handle(self, cmd):
         """
@@ -112,7 +110,7 @@ class Handler:
             epochs=self._cfg.analysis.epochs,
             device="cpu",
         )
-        trainer = NNDirectionsTrainer(self._flags, cfg)
+        trainer = NNDirectionsTrainer(cfg)
         logger.info(f"adj.shape={adj.shape}, rets.shape={rets.shape}")
         trainer.fit(rets)
 

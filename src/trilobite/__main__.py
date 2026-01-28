@@ -6,17 +6,16 @@ from typing import NoReturn
 
 from trilobite.app import App
 from trilobite.cli.cli import parse_args
-from trilobite.cli.runtimeflags import RuntimeFlags
-from trilobite.cli.cliflags import CLIFlags 
+from trilobite.cli.runtimeflags import ConfigFlags, CliFlags
 from trilobite.config.load import load_config
 from trilobite.logging.setup import setup_logging
 
-def _headless_main(cliflags: CLIFlags, runtimeflags: RuntimeFlags) -> None:
+def _headless_main(runtimeflags: ConfigFlags, cliflags: CliFlags) -> None:
     """
     Starts the application in headless mode
     """
-    cfg = load_config(runtimeflags, cliflags)
-    app = App(cfg, runtimeflags)
+    cfg = load_config(runtimeflags)
+    app = App(cfg)
     app.run_headless(cliflags)
 
 def main() -> NoReturn:
@@ -26,8 +25,8 @@ def main() -> NoReturn:
     - Starts headless
     - Handles fatal errors
     """
-    runtimeflags,cliflags, ns = parse_args(sys.argv[1:])
-    level = logging.DEBUG if runtimeflags.debug else logging.INFO
+    configflags, cliflags = parse_args(sys.argv[1:])
+    level = logging.DEBUG if configflags.debug else logging.INFO
     #minimal fallback logging to stderr if unable to start setup_logging()
     logging.basicConfig(
             level=logging.INFO,
@@ -36,8 +35,8 @@ def main() -> NoReturn:
     logger = logging.getLogger("trilobite")
 
     try:
-        setup_logging(level=level, console=runtimeflags.consolelog)
-        _headless_main(cliflags,runtimeflags)
+        setup_logging(level=level, console=configflags.consolelog)
+        _headless_main(configflags, cliflags)
     except KeyboardInterrupt:
         logger.info("Interrupted by user")
         sys.exit(130)

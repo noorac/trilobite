@@ -4,6 +4,13 @@ from dataclasses import dataclass
 from datetime import date
 
 @dataclass(frozen=True)
+class CFGDev:
+    dev: bool
+    debug: bool
+    dry_run: bool
+    consolelog: bool
+
+@dataclass(frozen=True)
 class CFGTickerService:
     """
     Stores config settings for TickerService
@@ -24,15 +31,16 @@ class CFGMisc:
 
 @dataclass(frozen=True)
 class CFGAnalysis:
-    top_n: int = 20
-    n_factors: int = 20
-    min_days: int = 1260
-    lookback: int = 60
-    horizon: int = 1
-    epochs: int = 10
+    top_n: int # = 20
+    n_factors: int # = 20
+    min_days: int # = 1260
+    lookback: int # = 60
+    horizon: int # = 1
+    epochs: int # = 10
 
 @dataclass(frozen=True)
 class AppConfig:
+    dev: CFGDev
     ticker: CFGTickerService
     db: CFGDataBase
     misc: CFGMisc

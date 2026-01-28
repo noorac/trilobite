@@ -6,8 +6,7 @@ from datetime import date, timedelta
 from pandas import DataFrame
 import logging
 
-from trilobite.cli.runtimeflags import RuntimeFlags
-from trilobite.cli.cliflags import CLIFlags
+from trilobite.cli.runtimeflags import CliFlags
 from trilobite.ui.cli.clicontroller import CLIController
 from trilobite.config.models import AppConfig, CFGTickerService, CFGDataBase
 from trilobite.db.connect import DbSettings, connect
@@ -39,10 +38,8 @@ class App:
     """
     The main app! This object will run most of the program
     """
-    def __init__(self, cfg: AppConfig, flags: RuntimeFlags) -> None:
+    def __init__(self, cfg: AppConfig) -> None:
         logger.info("Running ..")
-        self._flags = flags
-
         self._cfg = cfg
 
         # DB wiring
@@ -61,13 +58,13 @@ class App:
 
         # Ticker wiring
         tickerclient = TickerClient()
-        ticker = TickerService(repo=repo, tickerclient=tickerclient, cfg=cfg.ticker, flags=self._flags)
+        ticker = TickerService(repo=repo, tickerclient=tickerclient, cfg_ts=self._cfg.ticker, cfg_dev= self._cfg.dev)
 
         #Create AppState
         self._state = AppState(repo=repo, market=market, ticker=ticker)
 
         #Handler wiring
-        self._handler = Handler(self._state, self._cfg, self._flags)
+        self._handler = Handler(self._state, self._cfg)
         return None
 
     def close(self) -> None:
@@ -79,11 +76,11 @@ class App:
         except Exception:
             logger.exception("Failed at closing DB connection")
 
-    def run_headless(self, flags: CLIFlags) -> None:
+    def run_headless(self, flags: CliFlags) -> None:
         """
         Running headless version, takes in the argv list from terminal
         """
-        ui = CLIController(flags=flags)
+        ui = CLIController(flags=flags, cfg=self._cfg.analysis)
         self._run_loop(ui)
 
     def _run_loop(self, ui) -> None:

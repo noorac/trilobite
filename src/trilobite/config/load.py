@@ -4,11 +4,10 @@ from datetime import date
 import logging
 from pathlib import Path
 from typing import Final
-from trilobite.cli.cliflags import CLIFlags
-from trilobite.cli.runtimeflags import RuntimeFlags
 from trilobite.config.models import (
     AppConfig,
     CFGAnalysis,
+    CFGDev,
     CFGMisc,
     CFGTickerService,
     CFGDataBase,
@@ -26,6 +25,10 @@ logger = logging.getLogger(__name__)
 CONFIG_FILENAME: Final[str] = "trilobite.conf"
 
 DEFAULTS: Final[dict[str, str]] = {
+    "dev" : "False",
+    "debug" : "False",
+    "dry_run" : "False",
+    "consolelog" : "False",
     "default_date": "1975-01-01",
     "default_timedelta": "1",
     "dbname": "trilobite",
@@ -47,6 +50,12 @@ CONFIG_TEMPLATE: Final[str] = """\
 # Inline comments are suppored: key = value # comment
 # 
 # Values are mostly strings; they are parsed into correct ypes by the app
+
+# --- Dev settings ---
+dev = False
+debug = False
+dry_run = False
+consolelog = False
 
 # --- TickerService Settings ---
 default_date = 1975-01-01
@@ -143,7 +152,7 @@ def _get_bool(cfg: dict[str, str], key: str) -> bool:
         logger.warning(f"Invalid bool for {key} = {raw}, defaulting to {DEFAULTS[key]}")
         return eval(DEFAULTS[key])
 
-def load_config(runtimeflags: RuntimeFlags, cliflags: CLIFlags) -> AppConfig:
+def load_config(runtimeflags: RuntimeFlags) -> AppConfig:
     """
     Takes in a dict of strings(check on this later) that is then distributed
     among different config modules, they are stored in a common module AppConfig
@@ -157,6 +166,13 @@ def load_config(runtimeflags: RuntimeFlags, cliflags: CLIFlags) -> AppConfig:
         _generate_config_file(filepath)
 
     cfg = _load_config_file(filepath)
+
+    dev_cfg = CFGDev(
+        dev=_get_bool(cfg, "dev"),
+        debug=_get_bool(cfg, "debug"),
+        dry_run=_get_bool(cfg, "dry_run"),
+        consolelog=_get_bool(cfg, "consolelog"),
+    )
 
     ticker_cfg = CFGTickerService(
         default_date=date.fromisoformat(cfg.get("default_date", DEFAULTS["default_date"])),
@@ -175,15 +191,16 @@ def load_config(runtimeflags: RuntimeFlags, cliflags: CLIFlags) -> AppConfig:
     )
 
     analysis_cfg = CFGAnalysis(
-        top_n=cliflags.topn if cliflags.topn is not None else _get_int(cfg, "top_n"),
-        n_factors=cliflags.n_factors if cliflags.n_factors is not None else _get_int(cfg, "n_factors"),
-        min_days=cliflags.min_days if cliflags.min_days is not None else _get_int(cfg, "min_days"),
-        lookback=cliflags.lookback if cliflags.lookback is not None else _get_int(cfg, "lookback"),
-        horizon=cliflags.horizon if cliflags.horizon is not None else _get_int(cfg, "horizon"),
-        epochs=cliflags.epochs if cliflags.epochs is not None else _get_int(cfg, "epochs"),
+        top_n=runtimeflags.topn if runtimeflags.topn is not None else _get_int(cfg, "top_n"),
+        n_factors=runtimeflags.n_factors if runtimeflags.n_factors is not None else _get_int(cfg, "n_factors"),
+        min_days=runtimeflags.min_days if runtimeflags.min_days is not None else _get_int(cfg, "min_days"),
+        lookback=runtimeflags.lookback if runtimeflags.lookback is not None else _get_int(cfg, "lookback"),
+        horizon=runtimeflags.horizon if runtimeflags.horizon is not None else _get_int(cfg, "horizon"),
+        epochs=runtimeflags.epochs if runtimeflags.epochs is not None else _get_int(cfg, "epochs"),
     )
 
     return AppConfig(
+        dev=dev_cfg,
         ticker=ticker_cfg,
         db=db_cfg,
         misc=misc_cfg,
