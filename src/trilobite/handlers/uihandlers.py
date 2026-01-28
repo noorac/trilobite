@@ -117,7 +117,7 @@ class Handler:
         yield EvtStatus("Predicting latest...", waittime=0)
         pred = trainer.predict_latest(rets)
 
-        ranked = pred.ranked(cmd.top_n)
+        ranked = pred.ranked(self._cfg.analysis.top_n)
         yield EvtPredictionRanked(date=pred.date, ranked=ranked)
 
         yield EvtStatus("Done.", waittime=1)

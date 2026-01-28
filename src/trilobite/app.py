@@ -80,7 +80,7 @@ class App:
         """
         Running headless version, takes in the argv list from terminal
         """
-        ui = CLIController(flags=flags, cfg=self._cfg.analysis)
+        ui = CLIController(flags=flags)
         self._run_loop(ui)
 
     def _run_loop(self, ui) -> None:

@@ -168,10 +168,10 @@ def load_config(runtimeflags: RuntimeFlags) -> AppConfig:
     cfg = _load_config_file(filepath)
 
     dev_cfg = CFGDev(
-        dev=_get_bool(cfg, "dev"),
-        debug=_get_bool(cfg, "debug"),
-        dry_run=_get_bool(cfg, "dry_run"),
-        consolelog=_get_bool(cfg, "consolelog"),
+        dev=runtimeflags.dev if runtimeflags.dev is not None else _get_bool(cfg, "dev"),
+        debug=runtimeflags.debug if runtimeflags.debug is not None else _get_bool(cfg, "debug"),
+        dry_run=runtimeflags.dry_run if runtimeflags.dry_run is not None else _get_bool(cfg, "dry_run"),
+        consolelog=runtimeflags.consolelog if runtimeflags.consolelog is not None else _get_bool(cfg, "consolelog"),
     )
 
     ticker_cfg = CFGTickerService(

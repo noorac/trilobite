@@ -24,9 +24,8 @@ from trilobite.events.uievents import (
 )
 
 class CLIController:
-    def __init__(self, flags: CliFlags, cfg: CFGAnalysis) -> None:
+    def __init__(self, flags: CliFlags) -> None:
         self._flags = flags
-        self._cfg = cfg
         self._bar = None
 
     def get_command(self) -> Command:
@@ -38,7 +37,7 @@ class CLIController:
             return CmdUpdateAll()
         if self._flags.train_nn:
             self._flags.train_nn = False
-            return CmdTrainNN(self._cfg.top_n)
+            return CmdTrainNN()
         else:
             return CmdQuit()
 

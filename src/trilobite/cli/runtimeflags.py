@@ -4,10 +4,10 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class ConfigFlags:
     #Dev related
-    dev: bool = False
-    debug: bool = False
-    dry_run: bool = False
-    consolelog: bool = False
+    dev: bool | None = None
+    debug: bool | None = None
+    dry_run: bool | None = None
+    consolelog: bool | None = None
     #Settings
     default_date: int | None = None
     default_timedelta: int | None = None
