@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import logging
+import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from trilobite.utils.paths import logs_dir
 
-def setup_logging(level: int = logging.INFO) -> None:
+def setup_logging(level: int = logging.INFO, console: bool = False) -> None:
     """
     Configures the logging for the entire application
 
@@ -47,4 +48,9 @@ def setup_logging(level: int = logging.INFO) -> None:
     last_run_handler.setLevel(level)
     last_run_handler.setFormatter(formatter)
     root_logger.addHandler(last_run_handler)
+    if console:
+        console_handler = logging.StreamHandler(sys.stderr)
+        console_handler.setLevel(level)
+        console_handler.setFormatter(formatter)
+        root_logger.addHandler(console_handler)
     return None

@@ -7,7 +7,8 @@ from typing import NoReturn
 
 from trilobite.app import App
 from trilobite.cli.cli import parse_args
-from trilobite.cli.runtimeflags import CLIFlags, RuntimeFlags
+from trilobite.cli.runtimeflags import RuntimeFlags
+from trilobite.cli.cliflags import CLIFlags 
 from trilobite.config.load import load_config
 from trilobite.logging.setup import setup_logging
 
@@ -61,7 +62,7 @@ def main() -> NoReturn:
     logger = logging.getLogger("trilobite")
 
     try:
-        setup_logging(level=level)
+        setup_logging(level=level, console=runtimeflags.consolelog)
         if runtimeflags.curses:
             curses.wrapper(_curses_main,runtimeflags)
         else:

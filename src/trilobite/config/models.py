@@ -23,8 +23,18 @@ class CFGMisc:
     stagger_requests: bool
 
 @dataclass(frozen=True)
+class CFGAnalysis:
+    top_n: int = 20
+    n_factors: int = 20
+    min_days: int = 1260
+    lookback: int = 60
+    horizon: int = 1
+    epochs: int = 10
+
+@dataclass(frozen=True)
 class AppConfig:
     ticker: CFGTickerService
     db: CFGDataBase
     misc: CFGMisc
+    analysis: CFGAnalysis
 

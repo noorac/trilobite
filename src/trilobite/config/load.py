@@ -7,6 +7,7 @@ from typing import Final
 from trilobite.cli.runtimeflags import RuntimeFlags
 from trilobite.config.models import (
     AppConfig,
+    CFGAnalysis,
     CFGMisc,
     CFGTickerService,
     CFGDataBase,
@@ -31,6 +32,12 @@ DEFAULTS: Final[dict[str, str]] = {
     "user": "none",
     "port": "5432",
     "stagger_requests": "True",
+    "top_n": "100",
+    "n_factors": "75",
+    "min_days": "3000",
+    "lookback": "256",
+    "horizon": "1",
+    "epochs": "30",
 }
 
 CONFIG_TEMPLATE: Final[str] = """\
@@ -54,6 +61,14 @@ port = 5432
 # The app will wait a small amount of time(1-2 seconds) between each request
 # to avoid spamming the target with requests
 stagger_requests = True
+
+# --- Analysis Settings ---
+top_n = 20
+n_factors = 20
+min_days = 1260
+lookback = 60
+horizon = 1
+epochs = 10
 """
 
 def _strip_inline_comment(line: str) -> str:
@@ -158,8 +173,18 @@ def load_config(flags: RuntimeFlags) -> AppConfig:
         stagger_requests=_get_bool(cfg, "stagger_requests"),
     )
 
+    analysis_cfg = CFGAnalysis(
+        top_n=_get_int(cfg, "top_n"),
+        n_factors=_get_int(cfg, "n_factors"),
+        min_days=_get_int(cfg, "min_days"),
+        lookback=_get_int(cfg, "lookback"),
+        horizon=_get_int(cfg, "horizon"),
+        epochs=_get_int(cfg, "epochs"),
+    )
+
     return AppConfig(
         ticker=ticker_cfg,
         db=db_cfg,
         misc=misc_cfg,
+        analysis=analysis_cfg,
     )
