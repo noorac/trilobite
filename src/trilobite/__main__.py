@@ -15,7 +15,7 @@ def _headless_main(cliflags: CLIFlags, runtimeflags: RuntimeFlags) -> None:
     """
     Starts the application in headless mode
     """
-    cfg = load_config(runtimeflags)
+    cfg = load_config(runtimeflags, cliflags)
     app = App(cfg, runtimeflags)
     app.run_headless(cliflags)
 

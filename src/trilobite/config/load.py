@@ -4,6 +4,7 @@ from datetime import date
 import logging
 from pathlib import Path
 from typing import Final
+from trilobite.cli.cliflags import CLIFlags
 from trilobite.cli.runtimeflags import RuntimeFlags
 from trilobite.config.models import (
     AppConfig,
@@ -142,7 +143,7 @@ def _get_bool(cfg: dict[str, str], key: str) -> bool:
         logger.warning(f"Invalid bool for {key} = {raw}, defaulting to {DEFAULTS[key]}")
         return eval(DEFAULTS[key])
 
-def load_config(flags: RuntimeFlags) -> AppConfig:
+def load_config(runtimeflags: RuntimeFlags, cliflags: CLIFlags) -> AppConfig:
     """
     Takes in a dict of strings(check on this later) that is then distributed
     among different config modules, they are stored in a common module AppConfig
@@ -174,12 +175,12 @@ def load_config(flags: RuntimeFlags) -> AppConfig:
     )
 
     analysis_cfg = CFGAnalysis(
-        top_n=_get_int(cfg, "top_n"),
-        n_factors=_get_int(cfg, "n_factors"),
-        min_days=_get_int(cfg, "min_days"),
-        lookback=_get_int(cfg, "lookback"),
-        horizon=_get_int(cfg, "horizon"),
-        epochs=_get_int(cfg, "epochs"),
+        top_n=cliflags.topn if cliflags.topn is not None else _get_int(cfg, "top_n"),
+        n_factors=cliflags.n_factors if cliflags.n_factors is not None else _get_int(cfg, "n_factors"),
+        min_days=cliflags.min_days if cliflags.min_days is not None else _get_int(cfg, "min_days"),
+        lookback=cliflags.lookback if cliflags.lookback is not None else _get_int(cfg, "lookback"),
+        horizon=cliflags.horizon if cliflags.horizon is not None else _get_int(cfg, "horizon"),
+        epochs=cliflags.epochs if cliflags.epochs is not None else _get_int(cfg, "epochs"),
     )
 
     return AppConfig(

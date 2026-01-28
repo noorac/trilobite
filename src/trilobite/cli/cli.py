@@ -16,7 +16,7 @@ def parse_args(argv: list[str]) -> tuple[RuntimeFlags,CLIFlags, argparse.Namespa
     p.add_argument("--updateall", action="store_true", help="Updates all tickers to today")
     p.add_argument("--consolelog", action="store_true", help="Logging will output to the console")
     p.add_argument("--train-nn", action="store_true", help="Train NN and print ranked predictioN")
-    p.add_argument("--topn", type=int, default=20, help="Top N tickers to display")
+    p.add_argument("--topn", type=int, help="Top N tickers to display")
     p.add_argument("--n-factors", type=int, default=20, help="Components for PCA extraction")
     p.add_argument("--min-days", type=int, default=1260, help="Minimum trading days required in DB")
     p.add_argument("--lookback", type=int, default=60, help="Lookback window (days)")

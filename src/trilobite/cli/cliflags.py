@@ -6,7 +6,7 @@ class CLIFlags:
     updateall: bool = False
     train_nn: bool = False
 
-    topn: int = 20
+    topn: int | None = None
     n_factors: int = 20
     min_days: int = 252 * 5
     lookback: int = 60
