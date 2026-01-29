@@ -141,6 +141,7 @@ class TickerService:
         Returns:
         - dict{key:ticker, value:date_of_last_entry}
         """
+        logger.debug("Start ..")
         self._ticker_list = self._tickerclient.get_todays_tickers()
 
         if self._cfg_dev.dev:
@@ -148,6 +149,7 @@ class TickerService:
         else:
             self._ticker_list = self._ticker_list
         
+        logger.info(f"Retrieved updated list of tickers(dev={self._cfg_dev.dev})")
         deactivated = self._reconsile_instruments(self._ticker_list)
         logger.info(f"The following tickers were deactivated: {deactivated}")
 
@@ -166,4 +168,5 @@ class TickerService:
             tickermap.append(self._build_ticker_objects(tickersymbol=key, lastdate=val))
 
         #Update to dataclass object later?
+        logger.debug("End ..")
         return tickermap

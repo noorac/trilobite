@@ -64,6 +64,7 @@ class Handler:
         Handles update all situation
         """
         tickers = self._state.ticker.update()
+        logger.info(f"Tickermap returned ..")
         total = len(tickers)
 
         if total == 0:
@@ -80,7 +81,6 @@ class Handler:
             try:
                 self.update_ticker(ticker)
             except Exception as e:
-                #yield EvtStatus(f"Error updating {ticker.tickersymbol}: {e}")
                 logger.exception(f"Error updating {ticker.tickersymbol}: {e}")
                 error_tickers.append(ticker.tickersymbol)
                 continue

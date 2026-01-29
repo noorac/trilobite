@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import date, timedelta
 from dataclasses import dataclass
 from typing import Any, Iterable, Mapping, Sequence
@@ -8,6 +9,8 @@ import pandas as pd
 import psycopg
 from psycopg.rows import tuple_row
 from pandas import DataFrame
+
+logger = logging.getLogger(__name__)
 
 def _none_if_na(x: Any) -> Any | None:
     """
@@ -230,6 +233,7 @@ class MarketRepo:
         - This counts only trading day rows, not calendar days
         - end date defaults to CURRENT_DATE in sql
         """
+        logger.debug(f"Start ..")
         if min_days <= 0:
             raise ValueError("min_days must be > 0")
 
@@ -257,6 +261,7 @@ class MarketRepo:
             cur.execute(sql, (start_date, end_date, min_days))
             rows: list[tuple[str]] = cur.fetchall()
 
+        logger.debug(f"End ..")
         return [t for (t,) in rows]
 
 
@@ -270,6 +275,7 @@ class MarketRepo:
         Fetch adjclose as a long dataframe withc olums:
         - ticker (str), date(datetime64 or date) adjclose(float)
         """
+        logger.debug("Start ..")
         cleaned = sorted({t.strip().upper() for t in tickers if t and t.strip()})
         if not cleaned:
             return pd.DataFrame(columns=["ticker", "date", "adjclose"])
@@ -291,6 +297,7 @@ class MarketRepo:
         df["ticker"] = df["ticker"].astype(str)
         df["date"] = pd.to_datetime(df["date"])
         df["adjclose"] = pd.to_numeric(df["adjclose"], errors="coerce")
+        logger.debug("End ..")
         return df
 
 

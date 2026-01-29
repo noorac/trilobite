@@ -49,6 +49,7 @@ class App:
             user=cfg.db.user,
             port=cfg.db.port,
         ))
+        logger.info(f"DB connection created")
         create_schema(self._conn)
         repo = MarketRepo(self._conn)
 
