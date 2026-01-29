@@ -39,7 +39,7 @@ class App:
     The main app! This object will run most of the program
     """
     def __init__(self, cfg: AppConfig) -> None:
-        logger.info("Running ..")
+        logger.debug("Start ..")
         self._cfg = cfg
 
         # DB wiring
@@ -65,6 +65,7 @@ class App:
 
         #Handler wiring
         self._handler = Handler(self._state, self._cfg)
+        logger.debug("End ..")
         return None
 
     def close(self) -> None:
@@ -80,11 +81,12 @@ class App:
         """
         Running headless version, takes in the argv list from terminal
         """
+        logger.debug("Start ..")
         ui = CLIController(flags=flags)
         self._run_loop(ui)
+        logger.debug("End ..")
 
     def _run_loop(self, ui) -> None:
-        logger.info(" > ")
         running = True
         while running:
             cmd: Command = ui.get_command()
