@@ -31,11 +31,11 @@ class MarketDataSource:
 
         start_date = end_date - timedelta(days=min_days - 1)
         long_df = self._repo.fetch_adjclose_long(tickers, start_date=start_date, end_date=end_date)
-        logger.info(f"Long df rows: {len(long_df)}")
+        logger.debug(f"Long df rows: {len(long_df)}")
 
         wide = long_df.pivot(index="date", columns="ticker", values="adjclose").sort_index()
-        logger.info(f"Wide before dropna: {wide.shape}")
+        logger.debug(f"Wide before dropna: {wide.shape}")
         wide = wide.dropna(axis=1)
-        logger.info(f"Wide after dropna(axis=1): {wide.shape}")
+        logger.debug(f"Wide after dropna(axis=1): {wide.shape}")
         return wide
 

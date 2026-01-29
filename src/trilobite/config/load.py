@@ -160,7 +160,7 @@ def load_config(runtimeflags: ConfigFlags) -> AppConfig:
     that is then passed back and sent to App, where App can distribute the
     submodules as it likes
     """
-    logger.info(f"Start ..")
+    logger.debug(f"Start ..")
     filepath = config_dir() / CONFIG_FILENAME
 
     if not filepath.is_file():
@@ -200,7 +200,7 @@ def load_config(runtimeflags: ConfigFlags) -> AppConfig:
         horizon=runtimeflags.horizon if runtimeflags.horizon is not None else _get_int(cfg, "horizon"),
         epochs=runtimeflags.epochs if runtimeflags.epochs is not None else _get_int(cfg, "epochs"),
     )
-    logger.debug(f"End ..")
+    logger.info(f"Config loaded ..")
     return AppConfig(
         dev=dev_cfg,
         ticker=ticker_cfg,

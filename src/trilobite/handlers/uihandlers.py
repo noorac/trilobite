@@ -95,8 +95,9 @@ class Handler:
 
         ds = MarketDataSource(self._state.repo)
 
-        yield EvtStatus(f"Building adjclose matrix (min_days={self._cfg.analysis.min_days})...", waittime=0)
+        yield EvtStatus(f"Building adjclose matrix ..", waittime=0)
         adj = ds.load_adjclose_matrix(min_days=self._cfg.analysis.min_days)
+        yield EvtStatus(f"Qualified tickers(min_days={self._cfg.analysis.min_days}): {adj.shape[1]}", waittime=0)
 
         yield EvtStatus("Computing log returns...", waittime=0)
         rets = prices_to_log_returns(adj)
@@ -111,16 +112,21 @@ class Handler:
             device="cpu",
         )
         trainer = NNDirectionsTrainer(cfg)
-        logger.info(f"adj.shape={adj.shape}, rets.shape={rets.shape}")
+        logger.debug(f"adj.shape={adj.shape}, rets.shape={rets.shape}")
+        yield EvtStatus(
+        f"n_factors={self._cfg.analysis.n_factors} | "
+        f"lookback={self._cfg.analysis.lookback} | "
+        f"horizon={self._cfg.analysis.horizon} | "
+        f"epochs={self._cfg.analysis.epochs} | "
+        f"device=cpu"
+        )
         trainer.fit(rets)
 
         yield EvtStatus("Predicting latest...", waittime=0)
         pred = trainer.predict_latest(rets)
 
         ranked = pred.ranked(self._cfg.analysis.top_n)
-        yield EvtPredictionRanked(date=pred.date, ranked=ranked)
-
-        yield EvtStatus("Done.", waittime=1)
+        yield EvtPredictionRanked(topn=self._cfg.analysis.top_n, date=pred.date, ranked=ranked)
 
 
 
@@ -146,7 +152,7 @@ class Handler:
         instrument_id = self._state.repo.ensure_instrument(ticker.tickersymbol)
         affected = self._state.repo.upsert_ohlcv_daily(instrument_id=instrument_id, df = df)
         count = affected if affected > 0 else len(df.index)
-        logger.info(f"Updated: {ticker.tickersymbol} , from date {ticker.update_date}, with {count} rows added")
+        logger.debug(f"Updated: {ticker.tickersymbol} , from date {ticker.update_date}, with {count} rows added")
 
     def detect_corporate_action(self, df: DataFrame) -> bool:
         """

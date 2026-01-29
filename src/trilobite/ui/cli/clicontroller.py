@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import time
+import logging
 
 from tqdm import tqdm
 
@@ -22,6 +23,8 @@ from trilobite.events.uievents import (
     EvtProgress,
     Event, 
 )
+
+logger = logging.getLogger(__name__)
 
 class CLIController:
     def __init__(self, flags: CliFlags) -> None:
@@ -47,7 +50,7 @@ class CLIController:
         """
         match evt:
             case EvtStatus():
-                print(f"{evt.text}")
+                logger.info(f"{evt.text}")
                 time.sleep(evt.waittime)
             case EvtProgress():
                 if self._bar is None:
@@ -63,6 +66,6 @@ class CLIController:
                     self._bar = None
                 time.sleep(evt.waittime)
             case EvtPredictionRanked():
-                print(f"{evt.date}:\n{evt.ranked}")
+                logger.info(f"\nTop {evt.topn}: \n{evt.date}:\n{evt.ranked}")
                 
 

@@ -98,7 +98,7 @@ class NNDirectionsTrainer:
         factor_spec = FactorSpec(n_factors=self.cfg.n_factors, standardize=self.cfg.standardize)
         fm = PCAReturnFactors(factor_spec).fit(returns_wide)
         factors = fm.transform(returns_wide)  # (T, K)
-        logger.info(f"factors.shape={factors.shape}, fm.n_factors={fm.n_factors}")
+        logger.debug(f"factors.shape={factors.shape}, fm.n_factors={fm.n_factors}")
 
         # 2) Dataset
         ds_spec = FactorDatasetSpec(lookback=self.cfg.lookback, horizon=self.cfg.horizon)
