@@ -21,7 +21,6 @@ class MarketDataSource:
         Loads the matrix for all adjclose values
         """
         tickers = self._repo.list_tickers_with_min_ohlcv_days(min_days, end_date=end_date)
-        logger.info(f"Qualified tickers(min_days={min_days}): {len(tickers)}")
 
         if end_date is None:
             with self._repo.conn.cursor() as cur:

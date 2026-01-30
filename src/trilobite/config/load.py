@@ -37,12 +37,12 @@ DEFAULTS: Final[dict[str, str]] = {
     "user": "none",
     "port": "5432",
     "stagger_requests": "True",
-    "top_n": "100",
+    "top_n": "20",
     "n_factors": "75",
-    "min_days": "3000",
-    "lookback": "256",
+    "min_days": "1260",
+    "lookback": "60",
     "horizon": "1",
-    "epochs": "30",
+    "epochs": "10",
 }
 
 CONFIG_TEMPLATE: Final[str] = """\
