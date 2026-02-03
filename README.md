@@ -5,7 +5,7 @@ A tool to get stock data, and analyse it.
 
 - The old version will be removed or made private in the future to avoid confusion, but is currently public so those who wish to see the starting point can do so.
 
-- Due to the rewrite this program is currently not functional, even if parts of the README, like the postgres-section suggests that it is possible. The README is being written as parts of the app comes together.
+- The following currently works: update all tickers based on an input list of tickers, store the corresponding data, run a quick and simple analysis on that data. The README is being written as parts of the app comes together.
 
 ## PostgreSQL setup (local development, peer authentication)
 

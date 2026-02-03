@@ -2,18 +2,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import time
+import logging
 
 from tqdm import tqdm
 
-from trilobite.cli.runtimeflags import RuntimeFlags
-from trilobite.cli.cliflags import CLIFlags
+from trilobite.cli.runtimeflags import CliFlags
 from trilobite.commands.uicommands import (
+    CmdDisplayGraph,
     CmdNotAnOption, 
     CmdQuit,
     CmdTrainNN, 
     CmdUpdateAll,
     Command, 
 )
+from trilobite.config.models import CFGAnalysis
 from trilobite.events.uievents import (
     EvtExit,
     EvtPredictionRanked,
@@ -23,8 +25,10 @@ from trilobite.events.uievents import (
     Event, 
 )
 
+logger = logging.getLogger(__name__)
+
 class CLIController:
-    def __init__(self, flags: CLIFlags) -> None:
+    def __init__(self, flags: CliFlags) -> None:
         self._flags = flags
         self._bar = None
 
@@ -33,12 +37,14 @@ class CLIController:
         Decides which command to send to Handler
         """
         if self._flags.updateall:
-            #self._argv = [e for e in self._argv if e != "--updateall"]
             self._flags.updateall = False
             return CmdUpdateAll()
         if self._flags.train_nn:
             self._flags.train_nn = False
-            return CmdTrainNN(self._flags.topn)
+            return CmdTrainNN()
+        if self._flags.display_graph:
+            self._flags.display_graph = False
+            return CmdDisplayGraph()
         else:
             return CmdQuit()
 
@@ -48,7 +54,7 @@ class CLIController:
         """
         match evt:
             case EvtStatus():
-                print(f"{evt.text}")
+                logger.info(f"{evt.text}")
                 time.sleep(evt.waittime)
             case EvtProgress():
                 if self._bar is None:
@@ -64,6 +70,6 @@ class CLIController:
                     self._bar = None
                 time.sleep(evt.waittime)
             case EvtPredictionRanked():
-                print(f"{evt.date}:\n{evt.ranked}")
+                logger.info(f"\nTop {evt.topn}: \n{evt.date}:\n{evt.ranked}")
                 
 

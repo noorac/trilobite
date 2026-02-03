@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 import os
 from typing import Optional
 
 import psycopg
+
+logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class DbSettings:
@@ -34,6 +37,7 @@ def connect(settings: DbSettings | None = None) -> psycopg.Connection:
     Returns:
     - psycopg.Connection: a new database connection with autocommit disabled
     """
+    logger.debug("Start ..")
     s = settings or DbSettings(
         dbname=os.getenv("TRILOBITE_DBNAME", "trilobite"),
         host=os.getenv("TRILOBITE_DBHOST", "/run/postgresql"),
@@ -41,6 +45,7 @@ def connect(settings: DbSettings | None = None) -> psycopg.Connection:
         port=int(os.getenv("TRILOBITE_DBPORT", "5432")),
     )
 
+    logger.debug("End ..")
     return psycopg.connect(
         dbname=s.dbname,
         host=s.host,

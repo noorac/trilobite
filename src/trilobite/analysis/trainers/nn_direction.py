@@ -15,7 +15,6 @@ from tqdm import tqdm
 from trilobite.analysis.dataset import FactorDatasetSpec, FactorWindowDirectionDataset
 from trilobite.analysis.factors import FactorSpec, PCAReturnFactors
 from trilobite.analysis.trainers.base import Prediction
-from trilobite.cli.runtimeflags import RuntimeFlags
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +75,7 @@ class NNDirectionsTrainer:
     Output: probabilities per ticker for next-day direction
     """
 
-    def __init__(self, runtimeflags: RuntimeFlags, cfg: Optional[NNDirectionsConfig] = None) -> None:
-        self._runtimeflags = runtimeflags
+    def __init__(self, cfg: Optional[NNDirectionsConfig] = None) -> None:
         self.cfg = cfg or NNDirectionsConfig()
         self._factor_model: PCAReturnFactors | None = None
         self._model: _FactorGRUToUniverse | None = None
@@ -100,7 +98,7 @@ class NNDirectionsTrainer:
         factor_spec = FactorSpec(n_factors=self.cfg.n_factors, standardize=self.cfg.standardize)
         fm = PCAReturnFactors(factor_spec).fit(returns_wide)
         factors = fm.transform(returns_wide)  # (T, K)
-        logger.info(f"factors.shape={factors.shape}, fm.n_factors={fm.n_factors}")
+        logger.debug(f"factors.shape={factors.shape}, fm.n_factors={fm.n_factors}")
 
         # 2) Dataset
         ds_spec = FactorDatasetSpec(lookback=self.cfg.lookback, horizon=self.cfg.horizon)
@@ -135,32 +133,21 @@ class NNDirectionsTrainer:
         #         opt.step()
         model.train()
         for _epoch in range(1, self.cfg.epochs + 1):
-            if not self._runtimeflags.curses:
-                pbar= tqdm(loader, desc=f"Train epoch {_epoch}/{self.cfg.epochs}", leave=False)
-                for x, y in pbar:
-                    # x: (B, lookback, K)
-                    # y: (B, N)
-                    x = x.to(device)
-                    y = y.to(device)
+            #Must remove pbar if using something else than terminal, see above
+            #for clean without progerss updates.
+            pbar= tqdm(loader, desc=f"Train epoch {_epoch}/{self.cfg.epochs}", leave=False)
+            for x, y in pbar:
+                # x: (B, lookback, K)
+                # y: (B, N)
+                x = x.to(device)
+                y = y.to(device)
 
-                    opt.zero_grad(set_to_none=True)
-                    logits = model(x)
-                    loss = loss_fn(logits, y)
-                    loss.backward()
-                    opt.step()
-                    pbar.set_postfix(loss=float(loss.detach().cpu()))
-            else:
-                for x, y in loader:
-                    # x: (B, lookback, K)
-                    # y: (B, N)
-                    x = x.to(device)
-                    y = y.to(device)
-
-                    opt.zero_grad(set_to_none=True)
-                    logits = model(x)
-                    loss = loss_fn(logits, y)
-                    loss.backward()
-                    opt.step()
+                opt.zero_grad(set_to_none=True)
+                logits = model(x)
+                loss = loss_fn(logits, y)
+                loss.backward()
+                opt.step()
+                pbar.set_postfix(loss=float(loss.detach().cpu()))
 
         self._factor_model = fm
         self._model = model
