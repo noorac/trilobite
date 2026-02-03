@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import os
 import time
-import subprocess
 from dataclasses import replace
 
 from pandas import DataFrame
@@ -142,19 +141,43 @@ class Handler:
         df = self._state.repo.fetch_adjclose_series(self._cfg.analysis.ticker, self._cfg.analysis.period)
         #create plot here for now
         import matplotlib.pyplot as plt
+        import subprocess
+        import numpy as np
 
-        plt.style.use("seaborn-v0_8-darkgrid")
+        x = np.arange(len(df))
+        adjclose = df["adjclose"].to_numpy()
+
+        coef = np.polyfit(x, adjclose, deg = 1)
+        trend = np.poly1d(coef)(x)
+
+        out_dir = data_dir(create=True)
+        filename = f"{self._cfg.analysis.ticker}_{self._cfg.analysis.period}.png"
+        out_path = out_dir / filename
+
+        #set colors:
+        plt.rcParams.update({
+        "figure.facecolor": "#0f172a",
+        "axes.facecolor": "#0f172a",
+        "axes.edgecolor": "white",
+        "axes.labelcolor": "white",
+        "text.color": "white",
+        "xtick.color": "white",
+        "ytick.color": "white",
+        "grid.color": "#e5e7eb",
+        "grid.alpha": 0.25,
+        })
+
+        #plt.style.use("seaborn-v0_8-darkgrid")
         fig, ax = plt.subplots(figsize=(10,5))
-        ax.plot(df["date"], df["adjclose"], linewidth=2)
+        #ax.plot(df["date"], df["adjclose"], linewidth=2)
+        ax.plot(df["date"], adjclose, label="Adj Close", linewidth=2, color="#38bdf8")
+        ax.plot(df["date"], trend, label="Linear trend", linestyle="--", linewidth=2, color="#fbbf24")
         ax.set_title(f"{self._cfg.analysis.ticker} - Adjusted close ({self._cfg.analysis.period})")
         ax.set_xlabel("Date")
         ax.set_ylabel("Adjusted Close")
         ax.grid(True)
+        ax.legend()
         fig.autofmt_xdate()
-        # plt.show()
-        out_dir = data_dir(create=True)
-        filename = f"{self._cfg.analysis.ticker}_{self._cfg.analysis.period}.png"
-        out_path = out_dir / filename
         fig.tight_layout()
         fig.savefig(out_path, dpi=150)
         plt.close(fig)
