@@ -1,7 +1,8 @@
 #Helper functions
+from datetime import date, timedelta
 import random
 import logging
-from typing import Optional
+from typing import Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -30,11 +31,17 @@ def period_to_date(period: str, *, end_date: date) -> Tuple[Optional[date], date
     try:
         p = int(p)
     except ValueError:
-        logger.info(f"Cannot convert {p} to integer, defaulting to 3")
-        p = 3
-    if m not in ["d", "w", "m", "y"]:
-        logger.info(f"Not a valid period-symbol: {m}, defaulting to 'm'")
-        m = "m"
+        logger.warning(f"Cannot convert {p} to integer, defaulting to 30")
+        p = 30
 
+    if m == "d":
+        return end_date - timedelta(days=p), end_date
+    if m == "w":
+        return end_date - timedelta(weeks=p), end_date
+    if m == "m":
+        return end_date - timedelta(days=30*p), end_date
+    if m == "y":
+        return end_date - timedelta(days=365*p), end_date
 
-
+    logger.warning(f"Unhandled period unit: {p}{m}. Defaulting to 30d")
+    return end_date - timedelta(days=30), end_date
