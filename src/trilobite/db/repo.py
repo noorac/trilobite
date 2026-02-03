@@ -300,4 +300,15 @@ class MarketRepo:
         logger.debug("End ..")
         return df
 
+    def last_ohlcv_date_for_ticker(self, ticker: str) -> date | None:
+        """
+        Returns the latest stored OHLCV date for a single ticker
+        """
+        t = ticker.strip().upper()
+        if not t:
+            logger.error(f"Ticker cannot be empty: {t}")
+            raise 
+
+
+
 
