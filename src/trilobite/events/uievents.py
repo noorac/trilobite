@@ -23,5 +23,6 @@ class EvtExit(Event): ...
 
 @dataclass(frozen=True)
 class EvtPredictionRanked(Event):
+    topn: int
     date: pd.Timestamp
     ranked: pd.Series

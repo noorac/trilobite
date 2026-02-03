@@ -7,7 +7,7 @@ from pathlib import Path
 
 from trilobite.utils.paths import logs_dir
 
-def setup_logging(level: int = logging.INFO, console: bool = False) -> None:
+def setup_logging(level: int = logging.INFO, console: None | bool = False) -> None:
     """
     Configures the logging for the entire application
 

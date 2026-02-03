@@ -30,6 +30,7 @@ class MarketService:
         Returns:
         - pandas.DataFrame containing the OHLCV data
         """
+        logger.debug("Start ..")
         ticker = ticker.strip().upper()
         if not ticker:
             logger.warning("get_ohlcv was called with empty ticker")
@@ -39,5 +40,6 @@ class MarketService:
             logger.warning(f"Invalid ticker format: {ticker}")
             raise ValueError(f"Invalid ticker format: {ticker}")
 
+        logger.debug("End ..")
         return self._client.get_ohlcv(ticker, start_date = start_date)
 

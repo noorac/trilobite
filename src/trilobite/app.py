@@ -6,8 +6,7 @@ from datetime import date, timedelta
 from pandas import DataFrame
 import logging
 
-from trilobite.cli.runtimeflags import RuntimeFlags
-from trilobite.cli.cliflags import CLIFlags
+from trilobite.cli.runtimeflags import CliFlags
 from trilobite.ui.cli.clicontroller import CLIController
 from trilobite.config.models import AppConfig, CFGTickerService, CFGDataBase
 from trilobite.db.connect import DbSettings, connect
@@ -19,7 +18,6 @@ from trilobite.marketdata.marketservice import MarketService
 from trilobite.state.state import AppState
 from trilobite.tickers.tickerclient import TickerClient
 from trilobite.tickers.tickerservice import Ticker, TickerService
-from trilobite.ui.curses.uicontroller import UIController
 from trilobite.commands.uicommands import (
     CmdNotAnOption, 
     CmdQuit, 
@@ -40,10 +38,8 @@ class App:
     """
     The main app! This object will run most of the program
     """
-    def __init__(self, cfg: AppConfig, flags: RuntimeFlags) -> None:
-        logger.info("Running ..")
-        self._flags = flags
-
+    def __init__(self, cfg: AppConfig) -> None:
+        logger.debug("Start ..")
         self._cfg = cfg
 
         # DB wiring
@@ -53,6 +49,7 @@ class App:
             user=cfg.db.user,
             port=cfg.db.port,
         ))
+        logger.info(f"DB connection created")
         create_schema(self._conn)
         repo = MarketRepo(self._conn)
 
@@ -62,13 +59,14 @@ class App:
 
         # Ticker wiring
         tickerclient = TickerClient()
-        ticker = TickerService(repo=repo, tickerclient=tickerclient, cfg=cfg.ticker, flags=self._flags)
+        ticker = TickerService(repo=repo, tickerclient=tickerclient, cfg_ts=self._cfg.ticker, cfg_dev= self._cfg.dev)
 
         #Create AppState
         self._state = AppState(repo=repo, market=market, ticker=ticker)
 
         #Handler wiring
-        self._handler = Handler(self._state, self._cfg, self._flags)
+        self._handler = Handler(self._state, self._cfg)
+        logger.debug("End ..")
         return None
 
     def close(self) -> None:
@@ -80,24 +78,16 @@ class App:
         except Exception:
             logger.exception("Failed at closing DB connection")
 
-    def run_curses(self, stdscr: "curses._CursesWindow") -> None:
-        """
-        Starting up the UIController, takes in the stdscr from curses
-        """
-        logger.info("Running ..")
-        ui = UIController(stdscr)
-        ui.handle_event(EvtStartUp())
-        self._run_loop(ui)
-
-    def run_headless(self, flags: CLIFlags) -> None:
+    def run_headless(self, flags: CliFlags) -> None:
         """
         Running headless version, takes in the argv list from terminal
         """
+        logger.debug("Start ..")
         ui = CLIController(flags=flags)
         self._run_loop(ui)
+        logger.debug("End ..")
 
     def _run_loop(self, ui) -> None:
-        logger.info(" > ")
         running = True
         while running:
             cmd: Command = ui.get_command()

@@ -5,8 +5,7 @@ from typing import Protocol
 from datetime import date, timedelta
 import logging
 
-from trilobite.cli.runtimeflags import RuntimeFlags
-from trilobite.config.models import CFGTickerService
+from trilobite.config.models import CFGDev, CFGTickerService
 from trilobite.tickers.tickerclient import TickerClient
 
 logger = logging.getLogger(__name__)
@@ -42,11 +41,11 @@ class TickerService:
     """
     Keeps track of currently active tickers on the market
     """
-    def __init__(self, repo: TickerRepo, tickerclient: TickerClient, cfg: CFGTickerService, flags: RuntimeFlags) -> None:
+    def __init__(self, repo: TickerRepo, tickerclient: TickerClient, cfg_ts: CFGTickerService, cfg_dev: CFGDev) -> None:
         self._repo = repo
         self._tickerclient = tickerclient
-        self._cfg = cfg
-        self._flags = flags
+        self._cfg_ts = cfg_ts
+        self._cfg_dev = cfg_dev
 
         self._ticker_list: list[str] = []
         self._ticker_dict: dict[str, date | None] = {}
@@ -81,7 +80,7 @@ class TickerService:
         Returns:
         - date object, lastdate if not None, default set in cfg if None
         """
-        return (lastdate-timedelta(self._cfg.default_timedelta)) if lastdate is not None else self._cfg.default_date
+        return (lastdate-timedelta(self._cfg_ts.default_timedelta)) if lastdate is not None else self._cfg_ts.default_date
 
     def _flag_lastdate(self, lastdate: date | None) -> bool:
         """
@@ -142,13 +141,15 @@ class TickerService:
         Returns:
         - dict{key:ticker, value:date_of_last_entry}
         """
+        logger.debug("Start ..")
         self._ticker_list = self._tickerclient.get_todays_tickers()
 
-        if self._flags.dev:
+        if self._cfg_dev.dev:
             self._ticker_list = ["AAPL", "GOOGL", "DIS", "NVDA", "CAT", "META", "TSLA"]
         else:
             self._ticker_list = self._ticker_list
         
+        logger.info(f"Retrieved updated list of tickers(dev={self._cfg_dev.dev})")
         deactivated = self._reconsile_instruments(self._ticker_list)
         logger.info(f"The following tickers were deactivated: {deactivated}")
 
@@ -167,4 +168,5 @@ class TickerService:
             tickermap.append(self._build_ticker_objects(tickersymbol=key, lastdate=val))
 
         #Update to dataclass object later?
+        logger.debug("End ..")
         return tickermap

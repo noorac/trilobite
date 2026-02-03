@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import date, timedelta
 from dataclasses import dataclass
 from typing import Any, Iterable, Mapping, Sequence
@@ -7,7 +8,12 @@ from typing import Any, Iterable, Mapping, Sequence
 import pandas as pd
 import psycopg
 from psycopg.rows import tuple_row
-from pandas import DataFrame
+from pandas import DataFrame, to_numeric
+from torch import TupleType
+
+from trilobite.utils.utils import period_to_date
+
+logger = logging.getLogger(__name__)
 
 def _none_if_na(x: Any) -> Any | None:
     """
@@ -230,6 +236,7 @@ class MarketRepo:
         - This counts only trading day rows, not calendar days
         - end date defaults to CURRENT_DATE in sql
         """
+        logger.debug(f"Start ..")
         if min_days <= 0:
             raise ValueError("min_days must be > 0")
 
@@ -257,6 +264,7 @@ class MarketRepo:
             cur.execute(sql, (start_date, end_date, min_days))
             rows: list[tuple[str]] = cur.fetchall()
 
+        logger.debug(f"End ..")
         return [t for (t,) in rows]
 
 
@@ -270,6 +278,7 @@ class MarketRepo:
         Fetch adjclose as a long dataframe withc olums:
         - ticker (str), date(datetime64 or date) adjclose(float)
         """
+        logger.debug("Start ..")
         cleaned = sorted({t.strip().upper() for t in tickers if t and t.strip()})
         if not cleaned:
             return pd.DataFrame(columns=["ticker", "date", "adjclose"])
@@ -289,6 +298,75 @@ class MarketRepo:
 
         df = pd.DataFrame(rows, columns = ["ticker", "date", "adjclose"])
         df["ticker"] = df["ticker"].astype(str)
+        df["date"] = pd.to_datetime(df["date"])
+        df["adjclose"] = pd.to_numeric(df["adjclose"], errors="coerce")
+        logger.debug("End ..")
+        return df
+
+    def last_ohlcv_date_for_ticker(self, ticker: str) -> date | None:
+        """
+        Returns the latest stored OHLCV date for a single ticker
+        (as opposed to all tickers)
+        """
+        t = ticker.strip().upper()
+        if not t:
+            logger.error(f"Ticker cannot be empty: {t}")
+            raise 
+
+        sql = """
+        SELECT MAX(o.date) AS last_date
+        FROM instrument AS i
+        JOIN ohlcv_daily AS o ON o.instrument_id = i.id
+        WHERE i.ticker = %s;
+        """
+        with self.conn.cursor(row_factory=tuple_row) as cur:
+            cur.execute(sql, (t,))
+            (last_date,) = cur.fetchone()
+        return last_date
+
+    def fetch_adjclose_series(self, ticker: str, period: str) -> DataFrame:
+        """
+        Fetch a single tickers adjclose sereis from the DB.
+        
+        Params:
+        - ticker: e.g. "AAPL"
+        - period: eg.. "30d", "6m"
+
+        Returns:
+        - dataframe with columns date and adjclose(float)
+        """
+        t = ticker.strip().upper()
+        if not t:
+            logger.error(f"Ticker cannot be empty: {t}")
+        end_date = self.last_ohlcv_date_for_ticker(t)
+        if end_date is None:
+            return pd.DataFrame(columns=["date", "adjclose"])
+        
+        start_date, end_date = period_to_date(period, end_date=end_date)
+
+        params: tuple
+        date_filter_sql: str
+        if start_date is None:
+            date_filter_sql = "AND o.date <= %s"
+            params = (t, end_date)
+        else:
+            date_filter_sql = "AND o.date BETWEEN %s AND %s"
+            params = (t, start_date, end_date)
+
+        sql = f"""
+        SELECT o.date, o.adjclose
+        FROM instrument AS i
+        JOIN ohlcv_daily AS o ON o.instrument_id = i.id
+        WHERE i.ticker = %s
+        {date_filter_sql}
+        ORDER BY o.date;
+        """
+
+        with self.conn.cursor(row_factory=tuple_row) as cur:
+            cur.execute(sql, params)
+            rows: list[tuple[date, float | None]] = cur.fetchall()
+
+        df = pd.DataFrame(rows, columns=["date", "adjclose"])
         df["date"] = pd.to_datetime(df["date"])
         df["adjclose"] = pd.to_numeric(df["adjclose"], errors="coerce")
         return df
