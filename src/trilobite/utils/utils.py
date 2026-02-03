@@ -30,6 +30,11 @@ def period_to_date(period: str, *, end_date: date) -> Tuple[Optional[date], date
     try:
         p = int(p)
     except ValueError:
-        logger.info(f"Cannot convert {p} to integer")
+        logger.info(f"Cannot convert {p} to integer, defaulting to 3")
+        p = 3
+    if m not in ["d", "w", "m", "y"]:
+        logger.info(f"Not a valid period-symbol: {m}, defaulting to 'm'")
+        m = "m"
+
 
 
