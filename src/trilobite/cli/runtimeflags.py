@@ -17,11 +17,14 @@ class ConfigFlags:
     lookback: int | None = None # 60
     horizon: int | None = None # 1
     epochs: int | None = None # 10
+    period: str | None = None # 30d
+    ticker: str | None = None # AAPL
 
 @dataclass
 class CliFlags:
     #Commands
     updateall: bool = False
     train_nn: bool = False
+    display_graph: bool = False
 
 

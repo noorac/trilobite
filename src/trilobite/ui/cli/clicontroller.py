@@ -8,6 +8,7 @@ from tqdm import tqdm
 
 from trilobite.cli.runtimeflags import CliFlags
 from trilobite.commands.uicommands import (
+    CmdDisplayGraph,
     CmdNotAnOption, 
     CmdQuit,
     CmdTrainNN, 
@@ -41,6 +42,9 @@ class CLIController:
         if self._flags.train_nn:
             self._flags.train_nn = False
             return CmdTrainNN()
+        if self._flags.display_graph:
+            self._flags.display_graph = False
+            return CmdDisplayGraph()
         else:
             return CmdQuit()
 

@@ -43,6 +43,8 @@ DEFAULTS: Final[dict[str, str]] = {
     "lookback": "60",
     "horizon": "1",
     "epochs": "10",
+    "period": "30d",
+    "ticker": "AAPL",
 }
 
 CONFIG_TEMPLATE: Final[str] = """\
@@ -80,6 +82,9 @@ min_days = 1260
 lookback = 60
 horizon = 1
 epochs = 10
+
+ticker = AAPL
+period = 30d
 """
 
 def _strip_inline_comment(line: str) -> str:
@@ -199,6 +204,8 @@ def load_config(runtimeflags: ConfigFlags) -> AppConfig:
         lookback=runtimeflags.lookback if runtimeflags.lookback is not None else _get_int(cfg, "lookback"),
         horizon=runtimeflags.horizon if runtimeflags.horizon is not None else _get_int(cfg, "horizon"),
         epochs=runtimeflags.epochs if runtimeflags.epochs is not None else _get_int(cfg, "epochs"),
+        period=runtimeflags.period if runtimeflags.period is not None else _get_str(cfg, "period"),
+        ticker=runtimeflags.ticker if runtimeflags.ticker is not None else _get_str(cfg, "ticker"),
     )
     logger.info(f"Config loaded ..")
     return AppConfig(

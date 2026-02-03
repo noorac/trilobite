@@ -37,6 +37,8 @@ class CFGAnalysis:
     lookback: int # = 60
     horizon: int # = 1
     epochs: int # = 10
+    period: str # 30d
+    ticker: str
 
 @dataclass(frozen=True)
 class AppConfig:

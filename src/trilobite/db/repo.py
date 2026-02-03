@@ -8,7 +8,7 @@ from typing import Any, Iterable, Mapping, Sequence
 import pandas as pd
 import psycopg
 from psycopg.rows import tuple_row
-from pandas import DataFrame
+from pandas import DataFrame, to_numeric
 from torch import TupleType
 
 from trilobite.utils.utils import period_to_date
@@ -352,5 +352,23 @@ class MarketRepo:
         else:
             date_filter_sql = "AND o.date BETWEEN %s AND %s"
             params = (t, start_date, end_date)
+
+        sql = f"""
+        SELECT o.date, o.adjclose
+        FROM instrument AS i
+        JOIN ohlcv_daily AS o ON o.instrument_id = i.id
+        WHERE i.ticker = %s
+        {date_filter_sql}
+        ORDER BY o.date;
+        """
+
+        with self.conn.cursor(row_factory=tuple_row) as cur:
+            cur.execute(sql, params)
+            rows: list[tuple[date, float | None]] = cur.fetchall()
+
+        df = pd.DataFrame(rows, columns=["date", "adjclose"])
+        df["date"] = pd.to_datetime(df["date"])
+        df["adjclose"] = pd.to_numeric(df["adjclose"], errors="coerce")
+        return df
 
 

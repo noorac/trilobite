@@ -13,6 +13,7 @@ from trilobite.state.state import AppState
 from trilobite.config.models import AppConfig
 from trilobite.tickers.tickerservice import Ticker
 from trilobite.commands.uicommands import (
+    CmdDisplayGraph,
     CmdTrainNN,
     CmdNotAnOption, 
     CmdQuit, 
@@ -55,6 +56,9 @@ class Handler:
 
         if isinstance(cmd, CmdTrainNN):
             yield from self._handle_train_nn(cmd)
+
+        if isinstance(cmd, CmdDisplayGraph):
+            yield from self._handle_display_graph_of_period(cmd)
 
         else:
             yield EvtStatus(f"Unknown command: {cmd!r}")
@@ -128,6 +132,13 @@ class Handler:
         ranked = pred.ranked(self._cfg.analysis.top_n)
         yield EvtPredictionRanked(topn=self._cfg.analysis.top_n, date=pred.date, ranked=ranked)
 
+    def _handle_display_graph_of_period(self, cmd: CmdDisplayGraph):
+        """
+        Handles the request for graph display of a single ticker
+        """
+        df = self._state.repo.fetch_adjclose_series(self._cfg.analysis.ticker, self._cfg.analysis.period)
+        yield EvtStatus(df[0], waittime=0)
+
 
 
     def update_ticker(self, ticker: Ticker) -> None:
@@ -167,3 +178,4 @@ class Handler:
         - bool: returns True if there was a corporate action in the DataFrame
         """
         return ((df["dividends"] != 0.0).any() or (df["stocksplits"] != 0.0).any())
+

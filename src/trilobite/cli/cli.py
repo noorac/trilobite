@@ -21,7 +21,10 @@ def parse_args(argv: list[str]) -> tuple[ConfigFlags, CliFlags]:
     p.add_argument("--lookback", type=int, help="Lookback window (days)")
     p.add_argument("--horizon", type=int, help="Prediction horizon (days)")
     p.add_argument("--epochs", type=int, help="Training epochs")
+    p.add_argument("--period", type=str, help="Period to use, e.g. '30d', '2w', '4m', '6y'")
+    p.add_argument("--ticker", type=str, help="Ticker to use")
 
+    p.add_argument("--display-graph", action="store_true", help="Displays a graph of '--ticker' adjusted close over '--period'")
     p.add_argument("--updateall", action="store_true", help="Updates all tickers to today")
     p.add_argument("--train-nn", action="store_true", help="Train NN and print ranked predictioN")
 
@@ -41,10 +44,13 @@ def parse_args(argv: list[str]) -> tuple[ConfigFlags, CliFlags]:
         lookback=ns.lookback,
         horizon=ns.horizon,
         epochs=ns.epochs,
+        period=ns.period,
+        ticker=ns.ticker,
     )
     cliflags = CliFlags(
         updateall=ns.updateall,
         train_nn=ns.train_nn,
+        display_graph=ns.display_graph
     )
     return configflags, cliflags
 
