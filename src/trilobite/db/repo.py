@@ -9,6 +9,9 @@ import pandas as pd
 import psycopg
 from psycopg.rows import tuple_row
 from pandas import DataFrame
+from torch import TupleType
+
+from trilobite.utils.utils import period_to_date
 
 logger = logging.getLogger(__name__)
 
@@ -303,6 +306,7 @@ class MarketRepo:
     def last_ohlcv_date_for_ticker(self, ticker: str) -> date | None:
         """
         Returns the latest stored OHLCV date for a single ticker
+        (as opposed to all tickers)
         """
         t = ticker.strip().upper()
         if not t:
@@ -319,5 +323,34 @@ class MarketRepo:
             cur.execute(sql, (t,))
             (last_date,) = cur.fetchone()
         return last_date
+
+    def fetch_adjclose_series(self, ticker: str, period: str) -> DataFrame:
+        """
+        Fetch a single tickers adjclose sereis from the DB.
+        
+        Params:
+        - ticker: e.g. "AAPL"
+        - period: eg.. "30d", "6m"
+
+        Returns:
+        - dataframe with columns date and adjclose(float)
+        """
+        t = ticker.strip().upper()
+        if not t:
+            logger.error(f"Ticker cannot be empty: {t}")
+        end_date = self.last_ohlcv_date_for_ticker(t)
+        if end_date is None:
+            return pd.DataFrame(columns=["date", "adjclose"])
+        
+        start_date, end_date = period_to_date(period, end_date=end_date)
+
+        params: tuple
+        date_filter_sql: str
+        if start_date is None:
+            date_filter_sql = "AND o.date <= %s"
+            params = (t, end_date)
+        else:
+            date_filter_sql = "AND o.date BETWEEN %s AND %s"
+            params = (t, start_date, end_date)
 
 
