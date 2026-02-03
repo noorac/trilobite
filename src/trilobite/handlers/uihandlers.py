@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import logging
+import os
 import time
+import subprocess
 from dataclasses import replace
 
 from pandas import DataFrame
@@ -28,6 +30,7 @@ from trilobite.events.uievents import (
     EvtProgress,
     Event, 
 )
+from trilobite.utils.paths import data_dir
 from trilobite.utils.utils import stagger_requests
 
 logger = logging.getLogger(__name__)
@@ -137,7 +140,35 @@ class Handler:
         Handles the request for graph display of a single ticker
         """
         df = self._state.repo.fetch_adjclose_series(self._cfg.analysis.ticker, self._cfg.analysis.period)
-        yield EvtStatus(df[0], waittime=0)
+        #create plot here for now
+        import matplotlib.pyplot as plt
+
+        plt.style.use("seaborn-v0_8-darkgrid")
+        fig, ax = plt.subplots(figsize=(10,5))
+        ax.plot(df["date"], df["adjclose"], linewidth=2)
+        ax.set_title(f"{self._cfg.analysis.ticker} - Adjusted close ({self._cfg.analysis.period})")
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Adjusted Close")
+        ax.grid(True)
+        fig.autofmt_xdate()
+        # plt.show()
+        out_dir = data_dir(create=True)
+        filename = f"{self._cfg.analysis.ticker}_{self._cfg.analysis.period}.png"
+        out_path = out_dir / filename
+        fig.tight_layout()
+        fig.savefig(out_path, dpi=150)
+        plt.close(fig)
+        #display in kitty if using kitty
+        term = os.environ.get("TERM", "")
+        if "kitty" not in term.lower():
+            yield EvtStatus("Not using kitty terminal, open plot manually", waittime=0)
+        try:
+            subprocess.run(["kitty", "+kitten", "icat", str(out_path)],
+                           check=False)
+        except FileNotFoundError:
+            logger.error(f"Cannot find file, open plot manually")
+            pass
+
 
 
 
