@@ -309,6 +309,15 @@ class MarketRepo:
             logger.error(f"Ticker cannot be empty: {t}")
             raise 
 
-
+        sql = """
+        SELECT MAX(o.date) AS last_date
+        FROM instrument AS i
+        JOIN ohlcv_daily AS o ON o.instrument_id = i.id
+        WHERE i.ticker = %s;
+        """
+        with self.conn.cursor(row_factory=tuple_row) as cur:
+            cur.execute(sql, (t,))
+            (last_date,) = cur.fetchone()
+        return last_date
 
 
