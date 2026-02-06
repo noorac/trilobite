@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import argparse
-from trilobite.cli.runtimeflags import CliFlags, ConfigFlags
-from trilobite.config.models import AppConfig, CFGAnalysis, CFGDataBase, CFGDev, CFGMisc, CFGTickerService
+from trilobite.config.config import AppConfig, CFGAnalysis, CFGDataBase, CFGDev, CFGMisc, CFGTickerService
+from trilobite.cli.runtimeflags import CliFlags
 
-def parse_args(argv: list[str]) -> tuple[ConfigFlags, CliFlags]:
+def parse_args(argv: list[str]) -> tuple[AppConfig, CliFlags]:
     """
     Parses over the arguments to create runtimeflags that can be used in
     the program
