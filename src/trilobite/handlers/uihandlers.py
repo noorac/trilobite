@@ -11,7 +11,7 @@ from trilobite.analysis.datasource import MarketDataSource
 from trilobite.analysis.features import prices_to_log_returns
 from trilobite.analysis.trainers.nn_direction import NNDirectionsConfig, NNDirectionsTrainer
 from trilobite.state.state import AppState
-from trilobite.config.models import AppConfig
+from trilobite.config.config import AppConfig
 from trilobite.tickers.tickerservice import Ticker
 from trilobite.commands.uicommands import (
     CmdDisplayGraph,
