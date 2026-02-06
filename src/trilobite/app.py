@@ -8,7 +8,7 @@ import logging
 
 from trilobite.cli.runtimeflags import CliFlags
 from trilobite.ui.cli.clicontroller import CLIController
-from trilobite.config.models import AppConfig, CFGTickerService, CFGDataBase
+from trilobite.config.config import AppConfig, CFGTickerService, CFGDataBase
 from trilobite.db.connect import DbSettings, connect
 from trilobite.db.repo import MarketRepo
 from trilobite.db.schema import create_schema

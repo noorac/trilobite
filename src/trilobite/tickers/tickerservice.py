@@ -5,7 +5,7 @@ from typing import Protocol
 from datetime import date, timedelta
 import logging
 
-from trilobite.config.models import CFGDev, CFGTickerService
+from trilobite.config.config import CFGDev, CFGTickerService
 from trilobite.tickers.tickerclient import TickerClient
 
 logger = logging.getLogger(__name__)

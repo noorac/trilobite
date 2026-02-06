@@ -15,7 +15,7 @@ from trilobite.commands.uicommands import (
     CmdUpdateAll,
     Command, 
 )
-from trilobite.config.models import CFGAnalysis
+from trilobite.config.config import CFGAnalysis
 from trilobite.events.uievents import (
     EvtExit,
     EvtPredictionRanked,
