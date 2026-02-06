@@ -96,3 +96,18 @@ WHERE i.ticker = %s
 ORDER BY o.date;
 """
 
+LIST_TICKERS_WITH_FULL_COVERAGE_IN_RANGE = """
+WITH expected AS (
+  SELECT COUNT(DISTINCT date) AS n
+  FROM ohlcv_daily
+  WHERE date BETWEEN %s AND %s
+)
+SELECT i.ticker
+FROM instrument i
+JOIN ohlcv_daily o ON o.instrument_id = i.id
+WHERE o.date BETWEEN %s AND %s
+GROUP BY i.ticker
+HAVING COUNT(DISTINCT o.date) = (SELECT n FROM expected)
+ORDER BY i.ticker;
+"""
+
