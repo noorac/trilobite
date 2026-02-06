@@ -102,8 +102,8 @@ class Handler:
         ds = MarketDataSource(self._state.repo)
 
         yield EvtStatus(f"Building adjclose matrix ..", waittime=0)
-        adj = ds.load_adjclose_matrix(min_days=self._cfg.analysis.min_days)
-        yield EvtStatus(f"Qualified tickers(min_days={self._cfg.analysis.min_days}): {adj.shape[1]}", waittime=0)
+        adj = ds.load_adjclose_matrix(period=self._cfg.analysis.period)
+        yield EvtStatus(f"Qualified tickers(min_days={self._cfg.analysis.period}): {adj.shape[1]}", waittime=0)
 
         yield EvtStatus("Computing log returns...", waittime=0)
         rets = prices_to_log_returns(adj)

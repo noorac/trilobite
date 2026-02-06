@@ -224,7 +224,7 @@ class MarketRepo:
 
 
     def list_tickers_with_min_ohlcv_days(self,
-                                         min_days: int,
+                                         period: str,
                                          *,
                                          end_date: date | None = None,
                                          ) -> list[str]:
@@ -237,8 +237,8 @@ class MarketRepo:
         - end date defaults to CURRENT_DATE in sql
         """
         logger.debug(f"Start ..")
-        if min_days <= 0:
-            raise ValueError("min_days must be > 0")
+        # if min_days <= 0:
+        #     raise ValueError("min_days must be > 0")
 
         if end_date is None:
             with self.conn.cursor(row_factory=tuple_row) as cur:
@@ -246,7 +246,8 @@ class MarketRepo:
                 (end_date_db,) = cur.fetchone()
             end_date = end_date_db
 
-        start_date = end_date - timedelta(days=int(min_days*2))
+        start_date, end_date = period_to_date(period, end_date=end_date)
+        #start_date = end_date - timedelta(days=int(min_days*2))
         #start_date = end_date - timedelta(days=min_days-1)
 
         sql = """
@@ -261,7 +262,7 @@ class MarketRepo:
         """
 
         with self.conn.cursor(row_factory=tuple_row) as cur:
-            cur.execute(sql, (start_date, end_date, min_days))
+            cur.execute(sql, (start_date, end_date, (start_date-end_date).days))
             rows: list[tuple[str]] = cur.fetchall()
 
         logger.debug(f"End ..")
