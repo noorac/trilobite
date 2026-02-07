@@ -12,10 +12,10 @@ logger = logging.getLogger(__name__)
 
 class TickerRepo(Protocol):
     """
-    Protocol that allows for insertion of the last_ohlcv_date_by_ticker method
+    Protocol that allows for insertion of the last_ohlcv_date_for_all_tickers method
     into TickerService
     """
-    def last_ohlcv_date_by_ticker(self) -> dict[str, date | None]:
+    def last_ohlcv_date_for_all_tickers(self) -> dict[str, date | None]:
         ...
 
     def ensure_instrument(self, ticker: str) -> int:
@@ -153,7 +153,7 @@ class TickerService:
         deactivated = self._reconsile_instruments(self._ticker_list)
         logger.info(f"The following tickers were deactivated: {deactivated}")
 
-        self._ticker_dict = self._repo.last_ohlcv_date_by_ticker()
+        self._ticker_dict = self._repo.last_ohlcv_date_for_all_tickers()
 
         self._populate_missing_tickers()
         self._prune_missing_tickers()

@@ -48,18 +48,18 @@ class Handler:
             yield EvtExit()
             return
 
-        if isinstance(cmd, CmdUpdateAll):
+        elif isinstance(cmd, CmdUpdateAll):
             yield from self._handle_update_all()
             return
 
-        if isinstance(cmd, CmdNotAnOption):
+        elif isinstance(cmd, CmdNotAnOption):
             yield EvtStatus("Not an option...", waittime=1)
             return
 
-        if isinstance(cmd, CmdTrainNN):
+        elif isinstance(cmd, CmdTrainNN):
             yield from self._handle_train_nn(cmd)
 
-        if isinstance(cmd, CmdDisplayGraph):
+        elif isinstance(cmd, CmdDisplayGraph):
             yield from self._handle_display_graph_of_period(cmd)
 
         else:

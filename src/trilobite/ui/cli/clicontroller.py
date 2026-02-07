@@ -39,10 +39,10 @@ class CLIController:
         if self._flags.updateall:
             self._flags.updateall = False
             return CmdUpdateAll()
-        if self._flags.train_nn:
+        elif self._flags.train_nn:
             self._flags.train_nn = False
             return CmdTrainNN()
-        if self._flags.display_graph:
+        elif self._flags.display_graph:
             self._flags.display_graph = False
             return CmdDisplayGraph()
         else:
