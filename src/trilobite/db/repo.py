@@ -53,26 +53,26 @@ class MarketRepo:
     #Local methods
     def _execute(self, sql: str, params: tuple | None = None) -> int:
         with self.conn.cursor() as cur:
-            cur.execute(sql, params or ())
+            cur.execute(sql, params or ()) #type: ignore[]
             rc = cur.rowcount
         self.conn.commit()
         return 0 if rc is None or rc < 0 else int(rc)
 
     def _executemany(self, sql: str, rows) -> int:
         with self.conn.cursor() as cur:
-            cur.executemany(sql, rows)
+            cur.executemany(sql, rows)#type: ignore[]
             rc = cur.rowcount
         self.conn.commit()
         return 0 if rc is None or rc < 0 else int(rc)
 
     def _fetchone(self, sql: str, params: tuple | None = None) -> tuple[Any, ...] | None:
         with self.conn.cursor(row_factory=tuple_row) as cur:
-            cur.execute(sql, params or ())
+            cur.execute(sql, params or ())#type: ignore[]
             return cur.fetchone()
 
     def _fetchall(self, sql: str, params: tuple | None = None) -> list[tuple[Any, ...]]:
         with self.conn.cursor(row_factory=tuple_row) as cur:
-            cur.execute(sql, params or ())
+            cur.execute(sql, params or ())#type: ignore[]
             return cur.fetchall()
 
     def _scalar(self, sql: str, params: tuple | None = None):
@@ -82,12 +82,30 @@ class MarketRepo:
 
     #Local helpers
     def _clean_ticker(self, ticker: str) -> str:
+        """
+        Strips and capitalizes all letters in a ticker.
+
+        Params:
+        -ticker, a string
+
+        Returns:
+        - string, ticker
+        """
         t = ticker.strip().upper()
         if not t:
             raise ValueError(f"Ticker cannot be empty")
         return t
 
     def _clean_tickers(self, tickers: Sequence[str]) -> list[str]:
+        """
+        Strips and capitalizes all letters in a sequence of tickers. 
+
+        Params
+        - tickers: a sequence of strings
+
+        Returns
+        - List, sorted. 
+        """
         return sorted({t.strip().upper() for t in tickers if t and t.strip()})
 
 
