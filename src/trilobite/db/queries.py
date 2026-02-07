@@ -26,7 +26,7 @@ WHERE ticker = ANY(%s)
   AND is_active = TRUE;
 """
 
-LAST_OHLCV_DATE_BY_TICKER = """
+LAST_OHLCV_DATE_FOR_ALL_TICKERS = """
 SELECT
     i.ticker,
     MAX(o.date) AS last_date
@@ -94,5 +94,20 @@ JOIN ohlcv_daily AS o ON o.instrument_id = i.id
 WHERE i.ticker = %s
   AND o.date <= %s
 ORDER BY o.date;
+"""
+
+LIST_TICKERS_WITH_FULL_COVERAGE_IN_RANGE = """
+WITH expected AS (
+  SELECT COUNT(DISTINCT date) AS n
+  FROM ohlcv_daily
+  WHERE date BETWEEN %s AND %s
+)
+SELECT i.ticker
+FROM instrument i
+JOIN ohlcv_daily o ON o.instrument_id = i.id
+WHERE o.date BETWEEN %s AND %s
+GROUP BY i.ticker
+HAVING COUNT(DISTINCT o.date) = (SELECT n FROM expected)
+ORDER BY i.ticker;
 """
 

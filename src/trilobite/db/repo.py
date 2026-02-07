@@ -12,6 +12,7 @@ from pandas import DataFrame, to_numeric
 from torch import TupleType
 
 from trilobite.utils.utils import period_to_date
+from trilobite.db import queries as q
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +50,66 @@ class MarketRepo:
     """
     conn: psycopg.Connection
 
+    #Local methods
+    def _execute(self, sql: str, params: tuple | None = None) -> int:
+        with self.conn.cursor() as cur:
+            cur.execute(sql, params or ()) #type: ignore[]
+            rc = cur.rowcount
+        self.conn.commit()
+        return 0 if rc is None or rc < 0 else int(rc)
+
+    def _executemany(self, sql: str, rows) -> int:
+        with self.conn.cursor() as cur:
+            cur.executemany(sql, rows)#type: ignore[]
+            rc = cur.rowcount
+        self.conn.commit()
+        return 0 if rc is None or rc < 0 else int(rc)
+
+    def _fetchone(self, sql: str, params: tuple | None = None) -> tuple[Any, ...] | None:
+        with self.conn.cursor(row_factory=tuple_row) as cur:
+            cur.execute(sql, params or ())#type: ignore[]
+            return cur.fetchone()
+
+    def _fetchall(self, sql: str, params: tuple | None = None) -> list[tuple[Any, ...]]:
+        with self.conn.cursor(row_factory=tuple_row) as cur:
+            cur.execute(sql, params or ())#type: ignore[]
+            return cur.fetchall()
+
+    def _scalar(self, sql: str, params: tuple | None = None):
+        row = self._fetchone(sql, params)
+        return None if row is None else row[0]
+
+
+    #Local helpers
+    def _clean_ticker(self, ticker: str) -> str:
+        """
+        Strips and capitalizes all letters in a ticker.
+
+        Params:
+        -ticker, a string
+
+        Returns:
+        - string, ticker
+        """
+        t = ticker.strip().upper()
+        if not t:
+            raise ValueError(f"Ticker cannot be empty")
+        return t
+
+    def _clean_tickers(self, tickers: Sequence[str]) -> list[str]:
+        """
+        Strips and capitalizes all letters in a sequence of tickers. 
+
+        Params
+        - tickers: a sequence of strings
+
+        Returns
+        - List, sorted. 
+        """
+        return sorted({t.strip().upper() for t in tickers if t and t.strip()})
+
+
+    # Methods
     def ensure_instrument(self, ticker: str) -> int:
         """
         Ensure a row exists in instrument for the given ticker and return its id
@@ -64,29 +125,12 @@ class MarketRepo:
         - int: the instrument id
 
         """
-        ticker = ticker.strip().upper()
-        if not ticker:
-            raise ValueError("Ticker cannot be empty")
-
-        with self.conn.cursor(row_factory=tuple_row) as cur:
-            cur.execute(
-                """
-                INSERT INTO instrument (ticker, is_active, last_seen, deactivated_at)
-                VALUES (%s, TRUE, CURRENT_DATE, NULL)
-                ON CONFLICT (ticker) DO UPDATE SET 
-                    ticker = EXCLUDED.ticker,
-                    is_active = TRUE,
-                    last_seen = CURRENT_DATE,
-                    deactivated_at = NULL
-                RETURNING id;
-                """,
-                (ticker,),
-            )
-            row = cur.fetchone()
-            if row is None:
-                raise RuntimeError("Failed to fetch instrument id after upsert")
-            (instrument_id,) = row
+        t = self._clean_ticker(ticker)
+        instrument_id = self._scalar(q.ENSURE_INSTRUMENT, (t,))
+        if instrument_id is None:
+            raise RuntimeError(f"Failed to fetch instrument id after upsert")
         return int(instrument_id)
+
 
     def upsert_ohlcv_daily(self, instrument_id: int, df: DataFrame) -> int:
         """
@@ -133,69 +177,31 @@ class MarketRepo:
             )
             for _, r in df[cols].iterrows()
         )
-        
-        sql = """
-        INSERT INTO ohlcv_daily (
-            instrument_id, date, open, high, low, close, adjclose, volume, dividends, stocksplits
-        )
-        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-        ON CONFLICT (instrument_id, date) DO UPDATE SET
-            open = EXCLUDED.open,
-            high = EXCLUDED.high,
-            low = EXCLUDED.low,
-            close = EXCLUDED.close,
-            adjclose = EXCLUDED.adjclose,
-            volume = EXCLUDED.volume,
-            dividends = EXCLUDED.dividends,
-            stocksplits = EXCLUDED.stocksplits
-        ;
+        return self._executemany(q.UPSERT_OHLCV_DAILY, rows)
+
+    def last_ohlcv_date_for_ticker(self, ticker: str) -> date | None:
         """
+        Returns the latest stored OHLCV date for a single ticker
+        (as opposed to all tickers)
+        """
+        t = self._clean_ticker(ticker)
+        return self._scalar(q.LAST_OHLCV_DATE_FOR_TICKER, (t,))
 
-        with self.conn.cursor() as cur:
-            cur.executemany(sql, rows)
-            affected = cur.rowcount 
-
-        self.conn.commit()
-        return 0 if affected is None or affected < 0 else int(affected)
-
-    def last_ohlcv_date_by_ticker(self) -> dict[str, date | None]:
+    def last_ohlcv_date_for_all_tickers(self) -> dict[str, date | None]:
         """
         Returns the latest stored OHLCV date per ticker
 
         Returns: a dict[ticker, date | None] for each instrument ticker, the max
         date in ohlcv_daily, or None if the ticker has no OHLCV rows yet
         """
-        sql = """
-        SELECT
-            i.ticker,
-            MAX(o.date) AS last_date
-        FROM instrument AS i
-        LEFT JOIN ohlcv_daily AS o
-            on o.instrument_id = i.id
-        GROUP BY i.ticker
-        ORDER BY i.ticker;
-        """
-
-        with self.conn.cursor(row_factory=tuple_row) as cur:
-            cur.execute(sql)
-            rows: list[tuple[str, date | None]] = cur.fetchall()
-
-        return dict(rows)
+        rows = self._fetchall(q.LAST_OHLCV_DATE_FOR_ALL_TICKERS)
+        return {ticker: last_date for (ticker, last_date) in rows}
 
     def list_active_tickers(self) -> list[str]:
         """
         Returns all tickers currently marked as active in the DB
         """
-        sql = """
-        SELECT ticker
-        FROM instrument
-        WHERE is_active = TRUE
-        ORDER BY ticker;
-        """
-        with self.conn.cursor(row_factory=tuple_row) as cur:
-            cur.execute(sql)
-            rows: list[tuple[str]] = cur.fetchall()
-        return [t for (t,) in rows]
+        return [t for (t,) in self._fetchall(q.LIST_ACTIVE_TICKERS)]
 
     def deactivate_tickers(self, tickers: list[str]) -> int:
         """
@@ -203,126 +209,28 @@ class MarketRepo:
 
         Returns number of rows updated
         """
-        cleaned = sorted({t.strip().upper() for t in tickers if t and t.strip()})
+        cleaned = self._clean_tickers(tickers)
         if not cleaned:
             return 0
-        
-        sql = """
-        UPDATE instrument
-        SET is_active = FALSE,
-            deactivated_at = CURRENT_DATE
-        WHERE ticker = ANY(%s)
-            AND is_active = TRUE;
-        """
+        return self._execute(q.DEACTIVATE_TICKERS, (cleaned,))
 
-        with self.conn.cursor() as cur:
-            cur.execute(sql, (cleaned,))
-            affected = cur.rowcount
-
-        self.conn.commit()
-        return 0 if affected is None or affected < 0 else int(affected)
-
-
-    def list_tickers_with_min_ohlcv_days(self,
-                                         min_days: int,
-                                         *,
-                                         end_date: date | None = None,
-                                         ) -> list[str]:
-        """
-        Returns all tickers that have at least min_days OHLCV rows in the 
-        inclusive data range. where start_date = end_date - min_days-1
-
-        Note:
-        - This counts only trading day rows, not calendar days
-        - end date defaults to CURRENT_DATE in sql
-        """
-        logger.debug(f"Start ..")
-        if min_days <= 0:
-            raise ValueError("min_days must be > 0")
-
-        if end_date is None:
-            with self.conn.cursor(row_factory=tuple_row) as cur:
-                cur.execute("SELECT CURRENT_DATE;")
-                (end_date_db,) = cur.fetchone()
-            end_date = end_date_db
-
-        start_date = end_date - timedelta(days=int(min_days*2))
-        #start_date = end_date - timedelta(days=min_days-1)
-
-        sql = """
-        SELECT i.ticker
-        FROM instrument AS i
-        JOIN ohlcv_daily AS o
-        ON o.instrument_id = i.id
-        WHERE o.date BETWEEN %s AND %s
-        GROUP BY i.ticker
-        HAVING COUNT(*) >= %s
-        ORDER BY i.ticker;
-        """
-
-        with self.conn.cursor(row_factory=tuple_row) as cur:
-            cur.execute(sql, (start_date, end_date, min_days))
-            rows: list[tuple[str]] = cur.fetchall()
-
-        logger.debug(f"End ..")
-        return [t for (t,) in rows]
-
-
-    def fetch_adjclose_long(self,
-                            tickers: Sequence[str],
-                            *,
-                            start_date: date,
-                            end_date: date,
-                            ) -> DataFrame:
+    def fetch_adjclose_long(self, tickers: Sequence[str], *, start_date: date, end_date: date) -> DataFrame:
         """
         Fetch adjclose as a long dataframe withc olums:
         - ticker (str), date(datetime64 or date) adjclose(float)
         """
         logger.debug("Start ..")
-        cleaned = sorted({t.strip().upper() for t in tickers if t and t.strip()})
+        cleaned = self._clean_tickers(tickers)
         if not cleaned:
-            return pd.DataFrame(columns=["ticker", "date", "adjclose"])
-
-        sql = """
-        SELECT i.ticker, o.date, o.adjclose
-        FROM instrument AS i
-        JOIN ohlcv_daily AS o
-        ON o.instrument_id = i.id
-        WHERE i.ticker = ANY(%s)
-        AND o.date BETWEEN %s AND %s
-        ORDER BY i.ticker, o.date;
-        """
-        with self.conn.cursor(row_factory=tuple_row) as cur:
-            cur.execute(sql, (cleaned, start_date, end_date))
-            rows: list[tuple[str, date, float | None]] = cur.fetchall()
-
-        df = pd.DataFrame(rows, columns = ["ticker", "date", "adjclose"])
+            return pd.DataFrame(columns=["ticker", "date", "adjclose"]) #type: ignore
+        rows = self._fetchall(q.FETCH_ADJCLOSE_LONG, (cleaned, start_date, end_date))
+        df = pd.DataFrame(rows, columns = ["ticker", "date", "adjclose"]) #type: ignore
         df["ticker"] = df["ticker"].astype(str)
         df["date"] = pd.to_datetime(df["date"])
         df["adjclose"] = pd.to_numeric(df["adjclose"], errors="coerce")
         logger.debug("End ..")
         return df
 
-    def last_ohlcv_date_for_ticker(self, ticker: str) -> date | None:
-        """
-        Returns the latest stored OHLCV date for a single ticker
-        (as opposed to all tickers)
-        """
-        t = ticker.strip().upper()
-        if not t:
-            logger.error(f"Ticker cannot be empty: {t}")
-            raise 
-
-        sql = """
-        SELECT MAX(o.date) AS last_date
-        FROM instrument AS i
-        JOIN ohlcv_daily AS o ON o.instrument_id = i.id
-        WHERE i.ticker = %s;
-        """
-        with self.conn.cursor(row_factory=tuple_row) as cur:
-            cur.execute(sql, (t,))
-            (last_date,) = cur.fetchone()
-        return last_date
 
     def fetch_adjclose_series(self, ticker: str, period: str) -> DataFrame:
         """
@@ -335,40 +243,52 @@ class MarketRepo:
         Returns:
         - dataframe with columns date and adjclose(float)
         """
-        t = ticker.strip().upper()
-        if not t:
-            logger.error(f"Ticker cannot be empty: {t}")
-        end_date = self.last_ohlcv_date_for_ticker(t)
+        cleaned = self._clean_ticker(ticker)
+        end_date = self.last_ohlcv_date_for_ticker(cleaned)
         if end_date is None:
-            return pd.DataFrame(columns=["date", "adjclose"])
+            return pd.DataFrame(columns=["date", "adjclose"]) #type: ignore
         
         start_date, end_date = period_to_date(period, end_date=end_date)
 
-        params: tuple
-        date_filter_sql: str
         if start_date is None:
-            date_filter_sql = "AND o.date <= %s"
-            params = (t, end_date)
+            rows = self._fetchall(q.FETCH_ADJCLOSE_SERIES_LEQ, (cleaned, end_date))
         else:
-            date_filter_sql = "AND o.date BETWEEN %s AND %s"
-            params = (t, start_date, end_date)
+            rows = self._fetchall(q.FETCH_ADJCLOSE_SERIES_BETWEEN, (cleaned, start_date, end_date))
 
-        sql = f"""
-        SELECT o.date, o.adjclose
-        FROM instrument AS i
-        JOIN ohlcv_daily AS o ON o.instrument_id = i.id
-        WHERE i.ticker = %s
-        {date_filter_sql}
-        ORDER BY o.date;
-        """
-
-        with self.conn.cursor(row_factory=tuple_row) as cur:
-            cur.execute(sql, params)
-            rows: list[tuple[date, float | None]] = cur.fetchall()
-
-        df = pd.DataFrame(rows, columns=["date", "adjclose"])
+        df = pd.DataFrame(rows, columns=["date", "adjclose"])#type: ignore
         df["date"] = pd.to_datetime(df["date"])
         df["adjclose"] = pd.to_numeric(df["adjclose"], errors="coerce")
         return df
 
+    def list_tickers_with_full_ohlcv_coverage(self, period: str, *, end_date: date | None = None) -> list[str]:
+        """
+        Queries the db for a list of tickers that have data for the given 
+        period
+
+        Params:
+        - period: string, e.g. 3y, 2w, 66d
+        - end_date, date, can be sendt the end date if not using today as last
+        day
+
+        Returns:
+        - list of strings, tickers
+
+        """
+        if end_date is None:
+            end_date = self._scalar("SELECT CURRENT_DATE;")
+            if end_date is None:
+                raise RuntimeError("DB returned NULL for CURRENT_DATE")
+
+        start_date, end_date = period_to_date(period, end_date=end_date)
+        if start_date is None:
+            # “max/all”: coverage doesn't make sense
+            # Option: return all active tickers; or require a min start date.
+            logger.warning(f"Period needs a start date when comparing tickers, start_date is None")
+            raise RuntimeError
+
+        rows = self._fetchall(
+            q.LIST_TICKERS_WITH_FULL_COVERAGE_IN_RANGE,
+            (start_date, end_date, start_date, end_date),
+        )
+        return [t for (t,) in rows]
 

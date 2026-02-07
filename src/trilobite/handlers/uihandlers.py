@@ -48,18 +48,18 @@ class Handler:
             yield EvtExit()
             return
 
-        if isinstance(cmd, CmdUpdateAll):
+        elif isinstance(cmd, CmdUpdateAll):
             yield from self._handle_update_all()
             return
 
-        if isinstance(cmd, CmdNotAnOption):
+        elif isinstance(cmd, CmdNotAnOption):
             yield EvtStatus("Not an option...", waittime=1)
             return
 
-        if isinstance(cmd, CmdTrainNN):
+        elif isinstance(cmd, CmdTrainNN):
             yield from self._handle_train_nn(cmd)
 
-        if isinstance(cmd, CmdDisplayGraph):
+        elif isinstance(cmd, CmdDisplayGraph):
             yield from self._handle_display_graph_of_period(cmd)
 
         else:
@@ -102,8 +102,8 @@ class Handler:
         ds = MarketDataSource(self._state.repo)
 
         yield EvtStatus(f"Building adjclose matrix ..", waittime=0)
-        adj = ds.load_adjclose_matrix(min_days=self._cfg.analysis.min_days)
-        yield EvtStatus(f"Qualified tickers(min_days={self._cfg.analysis.min_days}): {adj.shape[1]}", waittime=0)
+        adj = ds.load_adjclose_matrix(period=self._cfg.analysis.period)
+        yield EvtStatus(f"Qualified tickers(min_days={self._cfg.analysis.period}): {adj.shape[1]}", waittime=0)
 
         yield EvtStatus("Computing log returns...", waittime=0)
         rets = prices_to_log_returns(adj)

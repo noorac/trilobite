@@ -17,7 +17,7 @@ class MarketService:
     def __init__(self, client: YFClient) -> None:
         self._client = client
 
-    def get_ohlcv(self, ticker: str, start_date: date = date(1900, 1, 1)) -> DataFrame:
+    def get_ohlcv(self, ticker: str, start_date: date = date(1975, 1, 1)) -> DataFrame:
         """
         Normalizes and validates the ticker, then delegates the fetch of 
         OHLCV to the client.

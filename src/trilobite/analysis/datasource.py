@@ -4,6 +4,7 @@ from datetime import date, timedelta
 import logging
 from pandas import DataFrame
 from trilobite.db.repo import MarketRepo
+from trilobite.utils.utils import period_to_date
 
 logger = logging.getLogger(__name__)
 
@@ -14,21 +15,32 @@ class MarketDataSource:
 
     def load_adjclose_matrix(self,
                              *,
-                             min_days: int,
+                             period: str,
                              end_date: date | None = None,
                              ) -> DataFrame:
         """
         Loads the matrix for all adjclose values
         """
-        tickers = self._repo.list_tickers_with_min_ohlcv_days(min_days, end_date=end_date)
+        #tickers = self._repo.list_tickers_with_min_ohlcv_days(period, end_date=end_date)
 
         if end_date is None:
-            with self._repo.conn.cursor() as cur:
-                cur.execute("SELECT CURRENT_DATE;")
-                (end_date_db,) = cur.fetchone()
-            end_date = end_date_db
+            end_date = self._repo._scalar("SELECT CURRENT_DATE;")
+            if end_date is None:
+                raise RuntimeError("DB returned NULL for CURRENT_DATE")
+            # with self._repo.conn.cursor() as cur:
+            #     cur.execute("SELECT CURRENT_DATE;")
+            #     (end_date_db,) = cur.fetchone()
+            # end_date = end_date_db
+            #
+        #start_date = end_date - timedelta(days=min_days - 1)
+        start_date, end_date = period_to_date(period, end_date=end_date)
+        if start_date is None:
+            raise ValueError("No start date")
 
-        start_date = end_date - timedelta(days=min_days - 1)
+        tickers = self._repo.list_tickers_with_full_ohlcv_coverage(period, end_date=end_date)
+        if not tickers:
+            return DataFrame()
+
         long_df = self._repo.fetch_adjclose_long(tickers, start_date=start_date, end_date=end_date)
         logger.debug(f"Long df rows: {len(long_df)}")
 
