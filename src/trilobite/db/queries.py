@@ -26,7 +26,7 @@ WHERE ticker = ANY(%s)
   AND is_active = TRUE;
 """
 
-LAST_OHLCV_DATE_BY_TICKER = """
+LAST_OHLCV_DATE_FOR_ALL_TICKERS = """
 SELECT
     i.ticker,
     MAX(o.date) AS last_date

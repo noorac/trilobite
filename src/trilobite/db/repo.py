@@ -187,14 +187,14 @@ class MarketRepo:
         t = self._clean_ticker(ticker)
         return self._scalar(q.LAST_OHLCV_DATE_FOR_TICKER, (t,))
 
-    def last_ohlcv_date_by_ticker(self) -> dict[str, date | None]:
+    def last_ohlcv_date_for_all_tickers(self) -> dict[str, date | None]:
         """
         Returns the latest stored OHLCV date per ticker
 
         Returns: a dict[ticker, date | None] for each instrument ticker, the max
         date in ohlcv_daily, or None if the ticker has no OHLCV rows yet
         """
-        rows = self._fetchall(q.LAST_OHLCV_DATE_BY_TICKER)
+        rows = self._fetchall(q.LAST_OHLCV_DATE_FOR_ALL_TICKERS)
         return {ticker: last_date for (ticker, last_date) in rows}
 
     def list_active_tickers(self) -> list[str]:
@@ -214,23 +214,17 @@ class MarketRepo:
             return 0
         return self._execute(q.DEACTIVATE_TICKERS, (cleaned,))
 
-    def fetch_adjclose_long(self,
-                            tickers: Sequence[str],
-                            *,
-                            start_date: date,
-                            end_date: date,
-                            ) -> DataFrame:
+    def fetch_adjclose_long(self, tickers: Sequence[str], *, start_date: date, end_date: date) -> DataFrame:
         """
         Fetch adjclose as a long dataframe withc olums:
         - ticker (str), date(datetime64 or date) adjclose(float)
         """
         logger.debug("Start ..")
         cleaned = self._clean_tickers(tickers)
-        #cleaned = sorted({t.strip().upper() for t in tickers if t and t.strip()})
         if not cleaned:
-            return pd.DataFrame(columns=["ticker", "date", "adjclose"])
+            return pd.DataFrame(columns=["ticker", "date", "adjclose"]) #type: ignore
         rows = self._fetchall(q.FETCH_ADJCLOSE_LONG, (cleaned, start_date, end_date))
-        df = pd.DataFrame(rows, columns = ["ticker", "date", "adjclose"])
+        df = pd.DataFrame(rows, columns = ["ticker", "date", "adjclose"]) #type: ignore
         df["ticker"] = df["ticker"].astype(str)
         df["date"] = pd.to_datetime(df["date"])
         df["adjclose"] = pd.to_numeric(df["adjclose"], errors="coerce")
@@ -252,7 +246,7 @@ class MarketRepo:
         cleaned = self._clean_ticker(ticker)
         end_date = self.last_ohlcv_date_for_ticker(cleaned)
         if end_date is None:
-            return pd.DataFrame(columns=["date", "adjclose"])
+            return pd.DataFrame(columns=["date", "adjclose"]) #type: ignore
         
         start_date, end_date = period_to_date(period, end_date=end_date)
 
@@ -261,17 +255,25 @@ class MarketRepo:
         else:
             rows = self._fetchall(q.FETCH_ADJCLOSE_SERIES_BETWEEN, (cleaned, start_date, end_date))
 
-        df = pd.DataFrame(rows, columns=["date", "adjclose"])
+        df = pd.DataFrame(rows, columns=["date", "adjclose"])#type: ignore
         df["date"] = pd.to_datetime(df["date"])
         df["adjclose"] = pd.to_numeric(df["adjclose"], errors="coerce")
         return df
 
-    def list_tickers_with_full_ohlcv_coverage(
-        self,
-        period: str,
-        *,
-        end_date: date | None = None,
-    ) -> list[str]:
+    def list_tickers_with_full_ohlcv_coverage(self, period: str, *, end_date: date | None = None) -> list[str]:
+        """
+        Queries the db for a list of tickers that have data for the given 
+        period
+
+        Params:
+        - period: string, e.g. 3y, 2w, 66d
+        - end_date, date, can be sendt the end date if not using today as last
+        day
+
+        Returns:
+        - list of strings, tickers
+
+        """
         if end_date is None:
             end_date = self._scalar("SELECT CURRENT_DATE;")
             if end_date is None:
@@ -279,9 +281,10 @@ class MarketRepo:
 
         start_date, end_date = period_to_date(period, end_date=end_date)
         if start_date is None:
-            # “max/all”: coverage doesn't make sense; decide policy.
+            # “max/all”: coverage doesn't make sense
             # Option: return all active tickers; or require a min start date.
-            return self.list_active_tickers()
+            logger.warning(f"Period needs a start date when comparing tickers, start_date is None")
+            raise RuntimeError
 
         rows = self._fetchall(
             q.LIST_TICKERS_WITH_FULL_COVERAGE_IN_RANGE,
