@@ -1,0 +1,33 @@
+@startuml
+
+skinparam dpi 200
+
+actor __User__ as user
+boundary _main_ as main
+control App._init_ as app.init
+entity Connect as connect
+entity Repo as repo
+entity MarketService as marketservice
+entity TickerService as tickerservice
+entity AppState as appstate
+entity Handler as handler
+control App.run_ as app.run
+
+user -> main : argv
+main -> app.init : cfg
+app.init -> connect : cfg
+app.init <-- connect : conn
+app.init -> repo : conn
+app.init <-- repo : reposervice
+app.init -> marketservice : marketclient
+app.init <-- marketservice : marketservice
+app.init -> tickerservice : tickerclient
+app.init <-- tickerservice : tickerservice
+app.init -> appstate : reposervice, marketservice, tickerservice
+app.init <-- appstate : _state
+app.init -> handler : state, cfg
+app.init <-- handler : _handler
+main -> app.run : cmd
+
+
+@enduml

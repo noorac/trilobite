@@ -1,0 +1,14 @@
+@startuml
+
+skinparam dpi 200
+
+"User" as u
+
+package Trilobite {
+    usecase "Update DB" as udb
+    usecase "Run analysis 1, 2 .." as ra
+}
+u --> udb
+u --> ra
+
+@enduml
