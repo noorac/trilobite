@@ -1,11 +1,11 @@
 # trilobite
 A tool to get stock data, and analyse it.
 
-- This is project is currently being rewritten. The old version is moved to [https://www.github.com/noorac/trilobite-bkup](https://www.github.com/noorac/trilobite-bkup)
-
-- The old version will be removed or made private in the future to avoid confusion, but is currently public so those who wish to see the starting point can do so.
-
-- The following currently works: update all tickers based on an input list of tickers, store the corresponding data, run a quick and simple analysis on that data. The README is being written as parts of the app comes together.
+## Current features
+- Fetch a daily list of active tickers
+- Run an update of all tickers in list of active tickers and store them
+- Run an analysis on the stocks that fit certain criteria(they stock has existed and had daily volume trading for X last days)
+- Plot a graph of a single ticker over a given time period, with basic linear regression plotted on top of the graph.
 
 ## PostgreSQL setup (local development, peer authentication)
 
