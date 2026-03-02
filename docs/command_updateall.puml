@@ -1,0 +1,8 @@
+@startuml
+
+skinparam dpi 200
+
+control handle() as h
+h -> h : Checkcommand
+
+@enduml

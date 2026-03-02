@@ -1,0 +1,28 @@
+@startuml
+skinparam dpi 200
+
+actor __User__ as user
+boundary _main_ as main
+control App.run_ as app.run
+entity UIController as uic
+control app._run_loop as rl
+entity _handler as handler
+
+main -> app.run : cmd
+app.run -> uic : cmd
+app.run <-- uic : ui
+app.run -> rl : ui
+loop running = True
+    rl -> rl : ui.get_command()
+    rl -> handler: cmd
+    handler -> handler : handle(cmd)
+    rl <-- handler : evt
+    rl -> rl : handle_event(evt)
+end
+rl -> handler : CmdQuit
+rl <-- handler : EvtExit
+rl -> rl : running = False
+main <-- rl : 
+
+
+@enduml
