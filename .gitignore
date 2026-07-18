@@ -298,4 +298,4 @@ tmp/
 .cache/
 
 .projectlayout
-
+*.png
